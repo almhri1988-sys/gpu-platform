@@ -5,106 +5,478 @@
   <title>منصة تأجير وحدات GPU</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { margin:0; font-family:Arial,sans-serif; background:#050505; color:#fff; }
-    header { padding:20px; text-align:center; background:#101010; border-bottom:1px solid #222; }
-    header h1 { margin:0; font-size:22px; }
-    header p { margin:6px 0 0; color:#bbb; font-size:13px; }
-    .container { max-width:900px; margin:0 auto; padding:20px; }
-    h2 { text-align:center; margin:20px 0 10px; }
-    .hero-text { text-align:center; color:#ccc; font-size:13px; margin-bottom:20px; }
-    .card { background:#151515; border-radius:12px; padding:18px; box-shadow:0 0 2px #222; margin-bottom:20px; }
-    .card h3 { margin:0 0 8px; }
-    .card p { margin:0; font-size:13px; color:#ccc; }
-    form { display:flex; flex-direction:column; gap:10px; margin-top:10px; }
-    label { font-size:13px; }
-    input, select {
-      padding:9px; border-radius:8px; border:1px solid #333;
-      background:#0f0f0f; color:#fff;
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #050505;
+      color: #f9fafb;
+      direction: rtl;
     }
-    input::placeholder { color:#666; }
+    h1,h2,h3 { margin: 0 0 10px; }
+    a { color: #4ade80; }
+
+    .page {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
+
+    header.hero {
+      text-align: center;
+      padding: 20px 10px 30px;
+      border-bottom: 1px solid #1f2933;
+    }
+    .hero h1 {
+      font-size: 26px;
+      margin-bottom: 6px;
+    }
+    .hero p {
+      font-size: 13px;
+      color: #9ca3af;
+      margin: 3px 0;
+    }
+
+    .section {
+      margin-top: 28px;
+      padding: 18px 14px 20px;
+      background: #0b0b0b;
+      border-radius: 12px;
+      border: 1px solid #1f2933;
+    }
+    .section-title {
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+    .section-sub {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 14px;
+    }
+
+    .field {
+      margin-bottom: 12px;
+    }
+    .field label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      background: #050505;
+      color: #f9fafb;
+      font-size: 13px;
+    }
+    .field input::placeholder,
+    .field textarea::placeholder {
+      color: #6b7280;
+    }
+    .field textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+
     .btn {
-      display:inline-block; padding:9px 16px; border-radius:8px; border:none;
-      background:#00ff88; color:#000; font-weight:bold; cursor:pointer; font-size:13px; margin-top:8px;
+      display: inline-block;
+      padding: 9px 16px;
+      border-radius: 999px;
+      border: none;
+      background: #22c55e;
+      color: #041007;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
     }
-    .btn.sm { font-size:12px; padding:6px 12px; }
-    .btn:hover { opacity:0.9; }
-    .list { margin-top:15px; display:flex; flex-direction:column; gap:12px; }
-    .item {
-      background:#151515; border-radius:10px; padding:12px; border:1px solid #222;
+    .btn:hover { opacity: 0.94; }
+    .btn-secondary {
+      background: #111827;
+      color: #e5e7eb;
+      border: 1px solid #374151;
     }
-    .item h4 { margin:0 0 6px; font-size:15px; }
-    .item small { display:block; color:#aaa; font-size:11px; margin-top:4px; }
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .flex-2col {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 800px) {
+      .flex-2col {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .hint-box {
+      font-size: 13px;
+      color: #9ca3af;
+    }
+    .hint-box ul {
+      margin: 6px 18px 0 0;
+      padding: 0 0 0 14px;
+      list-style: disc;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+    .filters select {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      background: #050505;
+      color: #e5e7eb;
+      font-size: 12px;
+    }
+
+    .stations-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .card {
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid #1f2933;
+      background: #050505;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .card-header span:first-child {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .card p {
+      margin: 2px 0;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+    .card-footer {
+      margin-top: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: #111827;
+      color: #e5e7eb;
+      border: 1px solid #374151;
+    }
+    .badge.economic { background: #022c22; color: #6ee7b7; border-color:#065f46; }
+    .badge.medium   { background: #1f2937; color: #bfdbfe; border-color:#1d4ed8; }
+    .badge.pro      { background: #3f1d35; color: #f9a8d4; border-color:#be185d; }
+
+    .success-msg {
+      font-size: 12px;
+      color: #4ade80;
+      margin-top: 8px;
+      display: none;
+    }
+    .error-msg {
+      font-size: 12px;
+      color: #f97373;
+      margin-top: 8px;
+      display: none;
+    }
+
     footer {
-      margin-top:40px; padding:15px; text-align:center; font-size:11px;
-      color:#777; border-top:1px solid #111; background:#050505;
+      margin-top: 36px;
+      padding-top: 10px;
+      font-size: 11px;
+      text-align: center;
+      color: #6b7280;
+      border-top: 1px solid #111827;
+    }
+
+    /* مودال طلب الاستئجار */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.78);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+    .modal {
+      width: 100%;
+      max-width: 420px;
+      background: #050505;
+      border-radius: 14px;
+      border: 1px solid #1f2933;
+      padding: 18px 16px 16px;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .modal-header h3 {
+      font-size: 16px;
+      margin: 0;
+    }
+    .close-btn {
+      border: none;
+      background: transparent;
+      color: #9ca3af;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .total-line {
+      font-size: 13px;
+      margin-top: 4px;
+      color: #e5e7eb;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>منصة تأجير وحدات GPU</h1>
-    <p>اربط أصحاب كروت الشاشة بالمستخدمين، وخذ عمولتك من كل عملية استئجار</p>
-  </header>
+  <div class="page">
+    <!-- الهيدر -->
+    <header class="hero">
+      <h1>منصة تأجير وحدات GPU</h1>
+      <p>سجّل وحدات GPU الخاصة بك مع السعر والأداء ووسيلة التواصل، ودعّ العملاء يرسلون طلبات الاستئجار تلقائيًا.</p>
+      <p>حالياً: تسجيل محطات + فلترة + طلبات استئجار تُحفظ في Firebase، والدفع نربطه لاحقاً من اللابتوب.</p>
+    </header>
 
-  <main class="container">
-    <!-- تسجيل محطة -->
-    <section>
-      <h2>تسجيل محطة جديدة</h2>
-      <p class="hero-text">أضف بيانات محطتك وسيتم عرضها في قائمة المحطات المتاحة للاستئجار.</p>
+    <!-- تسجيل محطة جديدة -->
+    <section class="section">
+      <div class="section-title">تسجيل محطة جديدة</div>
+      <div class="section-sub">
+        أضف بيانات وحدات GPU الخاصة بك، وستظهر في قائمة المحطات المتاحة للاستئجار للمستخدمين.
+      </div>
 
-      <div class="card">
-        <h3>بيانات المحطة</h3>
-        <form id="hostForm">
-          <label>اسم صاحب المحطة</label>
-          <input id="ownerName" placeholder="مثال: حسين المهري" />
+      <div class="flex-2col">
+        <form id="stationForm">
+          <div class="field">
+            <label>اسم صاحب المحطة</label>
+            <input id="ownerName" type="text" placeholder="مثال: حسين المهري" required />
+          </div>
 
-          <label>نوع بطاقة GPU</label>
-          <select id="gpuType">
-            <option value="RTX 4090">RTX 4090</option>
-            <option value="RTX 4080">RTX 4080</option>
-            <option value="RTX 3090">RTX 3090</option>
-            <option value="A100">A100</option>
-            <option value="H100">H100</option>
-            <option value="Other">نوع آخر</option>
-          </select>
+          <div class="field">
+            <label>وسيلة التواصل (إيميل أو رقم)</label>
+            <input id="contactMethod" type="text" placeholder="مثال: email@example.com أو رقم جوال" required />
+          </div>
 
-          <label>السعر لكل ساعة (بالدولار)</label>
-          <input id="pricePerHour" type="number" step="0.01" placeholder="0.50" />
+          <div class="field">
+            <label>نوع بطاقة الرسوميات (GPU)</label>
+            <select id="gpuType">
+              <option value="RTX 4090">RTX 4090</option>
+              <option value="RTX 4080">RTX 4080</option>
+              <option value="RTX 3090">RTX 3090</option>
+              <option value="A100">A100</option>
+              <option value="H100">H100</option>
+              <option value="بطاقة أخرى">بطاقة أخرى</option>
+            </select>
+          </div>
 
-          <label>الدولة / المدينة</label>
-          <input id="location" placeholder="مثال: عُمان - صلالة" />
+          <div class="field">
+            <label>السعر لكل ساعة (بالدولار)</label>
+            <input id="pricePerHour" type="number" step="0.01" min="0" placeholder="0.50" required />
+          </div>
+
+          <div class="field">
+            <label>الدولة</label>
+            <input id="locationCountry" type="text" placeholder="مثال: عُمان" />
+          </div>
+
+          <div class="field">
+            <label>المدينة</label>
+            <input id="locationCity" type="text" placeholder="مثال: صلالة" />
+          </div>
+
+          <div class="field">
+            <label>تصنيف الأداء</label>
+            <select id="performanceTier">
+              <option value="economic">اقتصادية – تجارب خفيفة / مشاريع بسيطة</option>
+              <option value="medium">متوسطة – تدريب نماذج متوسطة وتشغيل بوتات</option>
+              <option value="pro">احترافية – أعمال ذكاء اصطناعي ثقيلة</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>ملاحظات عن المحطة (اختياري)</label>
+            <textarea id="stationNotes" placeholder="مثال: سرعة اتصال عالية، الجهاز متوفر أغلب اليوم..."></textarea>
+          </div>
 
           <button type="submit" class="btn">حفظ المحطة</button>
+          <div id="stationMsg" class="success-msg"></div>
+          <div id="stationErr" class="error-msg"></div>
         </form>
+
+        <div class="hint-box">
+          <ul>
+            <li><b>وسيلة التواصل:</b> تستخدمها لاحقاً للتفاهم حول الدفع والتحويل، حتى نربط بوابة دفع آلية.</li>
+            <li><b>تصنيف الأداء:</b> يوضح للمستأجر قوة المحطة (اقتصادية / متوسطة / احترافية).</li>
+            <li>كل محطة تُخزن في Firestore داخل collection اسمها <b>stations</b>.</li>
+          </ul>
+        </div>
       </div>
     </section>
 
-    <!-- عرض المحطات -->
-    <section>
-      <h2>المحطات المتاحة للاستئجار</h2>
-      <p class="hero-text">اختر المحطة المناسبة ثم حدد عدد الساعات وأكمل الدفع.</p>
-      <div id="stationsList" class="list">
-        <p style="color:#aaa;font-size:12px;">جاري تحميل المحطات...</p>
+    <!-- المحطات المسجلة + الفلاتر -->
+    <section class="section">
+      <div class="section-title">المحطات المتاحة للاستئجار</div>
+      <div class="section-sub">
+        استخدم الفلاتر لاختيار الدولة أو تصنيف الأداء، ثم اضغط "استئجار الآن" لإرسال طلب استئجار يُحفظ في Firebase.
+      </div>
+
+      <div class="filters">
+        <div>
+          <span>تصفية حسب الدولة:</span>
+          <select id="filterCountry">
+            <option value="">كل الدول</option>
+          </select>
+        </div>
+        <div>
+          <span>تصفية حسب الأداء:</span>
+          <select id="filterTier">
+            <option value="">كل الفئات</option>
+            <option value="economic">اقتصادية</option>
+            <option value="medium">متوسطة</option>
+            <option value="pro">احترافية</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="stationsList" class="stations-list">
+        <p style="font-size:13px;color:#9ca3af;">جاري تحميل المحطات...</p>
       </div>
     </section>
-  </main>
 
-  <footer>
-    منصة تأجير وحدات GPU - نموذج جاهز قابل للتطوير والربط مع بوابات دفع وشركاء عالميين.
-  </footer>
+    <!-- قسم الرسائل للإدارة -->
+    <section class="section">
+      <div class="section-title">إرسال رسالة للإدارة</div>
+      <div class="section-sub">
+        إذا كان لديك استفسار أو اقتراح أو مشكلة، يمكنك إرسال رسالة، وسيتم الرد عليك من خلال بيانات التواصل التي تكتبها.
+      </div>
 
-  <!-- Firebase + Frontend Logic -->
+      <form id="contactForm">
+        <div class="field">
+          <label>اسمك</label>
+          <input id="contactName" type="text" placeholder="اكتب اسمك هنا" required />
+        </div>
+
+        <div class="field">
+          <label>البريد الإلكتروني أو وسيلة تواصل</label>
+          <input id="contactEmail" type="text" placeholder="إيميل أو رقم جوال" />
+        </div>
+
+        <div class="field">
+          <label>محتوى الرسالة</label>
+          <textarea id="contactMessage" placeholder="اكتب رسالتك أو استفسارك بالتفصيل" required></textarea>
+        </div>
+
+        <button type="submit" class="btn" style="width:100%;">إرسال الرسالة</button>
+        <div id="contactMsg" class="success-msg"></div>
+        <div id="contactErr" class="error-msg"></div>
+      </form>
+    </section>
+
+    <footer>
+      منصة تأجير وحدات GPU – تسجيل محطات، فلترة، طلبات استئجار ورسائل، والدفع سيتم ربطه لاحقاً بشكل آلي.
+    </footer>
+  </div>
+
+  <!-- مودال طلب الاستئجار -->
+  <div id="rentModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>طلب استئجار وحدة GPU</h3>
+        <button class="close-btn" onclick="closeRentModal()">×</button>
+      </div>
+
+      <form id="rentForm">
+        <div class="field">
+          <label>الوحدة المختارة</label>
+          <input id="rentGpu" type="text" readonly />
+        </div>
+
+        <div class="field">
+          <label>صاحب المحطة</label>
+          <input id="rentOwner" type="text" readonly />
+        </div>
+
+        <div class="field">
+          <label>الدولة / المدينة</label>
+          <input id="rentLocation" type="text" readonly />
+        </div>
+
+        <div class="field">
+          <label>تصنيف الأداء</label>
+          <input id="rentTier" type="text" readonly />
+        </div>
+
+        <div class="field">
+          <label>السعر لكل ساعة (دولار)</label>
+          <input id="rentPrice" type="number" readonly />
+        </div>
+
+        <div class="field">
+          <label>اسمك الكامل</label>
+          <input id="rentName" type="text" placeholder="مثال: أحمد علي" required />
+        </div>
+
+        <div class="field">
+          <label>البريد الإلكتروني أو وسيلة تواصل</label>
+          <input id="rentEmail" type="text" placeholder="اكتب وسيلة تواصل يمكن التواصل معك من خلالها" required />
+        </div>
+
+        <div class="field">
+          <label>عدد الساعات المطلوبة</label>
+          <input id="rentHours" type="number" min="1" step="1" value="1" required />
+          <div id="rentTotal" class="total-line"></div>
+        </div>
+
+        <div class="field">
+          <label>ملاحظات إضافية (اختياري)</label>
+          <textarea id="rentNotes" placeholder="تفاصيل المشروع، الوقت المناسب للتشغيل، أي شروط خاصة..."></textarea>
+        </div>
+
+        <button type="submit" class="btn" style="width:100%;">إرسال طلب الاستئجار</button>
+        <div id="rentMsg" class="success-msg"></div>
+        <div id="rentErr" class="error-msg"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Firebase + منطق المنصة -->
   <script type="module">
-    // Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
       getFirestore,
       collection,
       addDoc,
-      getDocs
+      getDocs,
+      serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // ⚠️ استخدم نفس الإعدادات التي عندك (هذا مثال من مشروعك)
+    // إعداد Firebase (نفس مشروعك)
     const firebaseConfig = {
       apiKey: "AIzaSyBAC-051sVaiI9gF-9AmP_3ltGfRfrfrzw",
       authDomain: "gpu-platform-ca19e.firebaseapp.com",
@@ -116,110 +488,331 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const db  = getFirestore(app);
 
-    const hostForm = document.getElementById("hostForm");
-    const stationsList = document.getElementById("stationsList");
+    // كاش للمحطات عشان الفلترة
+    let stationsCache = [];
 
-    // حفظ محطة جديدة في Firestore
-    hostForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const ownerName = document.getElementById("ownerName").value.trim();
-      const gpuType = document.getElementById("gpuType").value;
-      const pricePerHour = parseFloat(document.getElementById("pricePerHour").value);
-      const location = document.getElementById("location").value.trim();
+    // ---------------- تسجيل محطة جديدة ----------------
+    const stationForm = document.getElementById("stationForm");
+    const stationMsg  = document.getElementById("stationMsg");
+    const stationErr  = document.getElementById("stationErr");
 
-      if (!ownerName || !gpuType || !pricePerHour || !location) {
-        alert("رجاءً عبئ جميع الحقول.");
-        return;
-      }
+    function tierLabel(tier) {
+      if (tier === "economic")   return "اقتصادية – مشاريع خفيفة";
+      if (tier === "medium")     return "متوسطة – مشاريع متوسطة";
+      if (tier === "pro")        return "احترافية – مشاريع ثقيلة";
+      return "غير محدد";
+    }
 
-      try {
-        await addDoc(collection(db, "stations"), {
-          ownerName,
-          gpuType,
-          pricePerHour,
-          location,
-          createdAt: new Date().toISOString()
-        });
-        alert("تم حفظ المحطة بنجاح");
-        hostForm.reset();
-        loadStations();
-      } catch (err) {
-        console.error(err);
-        alert("خطأ أثناء الحفظ");
-      }
-    });
+    function tierClass(tier) {
+      if (tier === "economic") return "badge economic";
+      if (tier === "medium")   return "badge medium";
+      if (tier === "pro")      return "badge pro";
+      return "badge";
+    }
 
-    // تحميل المحطات من Firestore
-    async function loadStations() {
-      stationsList.innerHTML = "<p style='color:#aaa;font-size:12px;'>جاري تحميل المحطات...</p>";
-      try {
-        const snap = await getDocs(collection(db, "stations"));
-        if (snap.empty) {
-          stationsList.innerHTML = "<p style='color:#777;font-size:12px;'>لا توجد محطات مسجلة حتى الآن.</p>";
+    if (stationForm) {
+      stationForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        stationMsg.style.display = "none";
+        stationErr.style.display = "none";
+
+        const ownerName    = document.getElementById("ownerName").value.trim();
+        const contactMethod= document.getElementById("contactMethod").value.trim();
+        const gpuType      = document.getElementById("gpuType").value;
+        const price        = parseFloat(document.getElementById("pricePerHour").value || "0");
+        const country      = document.getElementById("locationCountry").value.trim();
+        const city         = document.getElementById("locationCity").value.trim();
+        const tier         = document.getElementById("performanceTier").value;
+        const notes        = document.getElementById("stationNotes").value.trim();
+
+        if (!ownerName || !contactMethod || !price) {
+          stationErr.textContent = "الرجاء تعبئة الاسم، وسيلة التواصل، والسعر على الأقل.";
+          stationErr.style.display = "block";
           return;
         }
 
-        stationsList.innerHTML = "";
-        snap.forEach((doc) => {
-          const data = doc.data();
-          const div = document.createElement("div");
-          div.className = "item";
-          div.innerHTML = `
-            <h4>${data.gpuType || "GPU"}</h4>
-            <small>المالك: ${data.ownerName || "غير معروف"} – ${data.location || "غير محدد"}</small>
-            <small>السعر: ${data.pricePerHour || 0} $ / ساعة</small>
-            <div style="margin-top:8px;">
-              <label style="font-size:11px;">عدد الساعات:</label>
-              <input type="number" min="1" step="1" value="1"
-                     style="width:60px;padding:4px 6px;border-radius:6px;border:1px solid #333;background:#000;color:#fff;font-size:11px;" />
-              <button class="btn sm">استئجار الآن</button>
-            </div>
-          `;
-          const hoursInput = div.querySelector("input");
-          const rentBtn = div.querySelector("button");
-
-          rentBtn.addEventListener("click", async () => {
-            const hours = parseInt(hoursInput.value, 10);
-            if (!hours || hours <= 0) {
-              alert("أدخل عدد ساعات صحيح");
-              return;
-            }
-            await rentStation(doc.id, hours);
+        try {
+          await addDoc(collection(db, "stations"), {
+            ownerName,
+            contactMethod,
+            gpuType,
+            pricePerHour: price,
+            country,
+            city,
+            tier,
+            notes,
+            createdAt: serverTimestamp()
           });
-
-          stationsList.appendChild(div);
-        });
-      } catch (err) {
-        console.error(err);
-        stationsList.innerHTML = "<p style='color:#f66;font-size:12px;'>خطأ أثناء قراءة البيانات.</p>";
-      }
-    }
-
-    // استئجار محطة – استدعاء دالة الدفع
-    async function rentStation(stationId, hours) {
-      try {
-        const res = await fetch("https://<REGION>-<PROJECT-ID>.cloudfunctions.net/createCheckoutSession", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ stationId, hours })
-        });
-
-        const data = await res.json();
-        if (data.url) {
-          window.location.href = data.url; // فتح صفحة Stripe
-        } else {
-          alert("تعذر إنشاء جلسة الدفع");
-          console.error(data);
+          stationMsg.textContent = "تم حفظ المحطة بنجاح.";
+          stationMsg.style.display = "block";
+          stationForm.reset();
+          loadStations();
+        } catch (err) {
+          console.error(err);
+          stationErr.textContent = "حدث خطأ أثناء حفظ المحطة. حاول مرة أخرى.";
+          stationErr.style.display = "block";
         }
+      });
+    }
+
+    // ---------------- تحميل المحطات + الفلاتر ----------------
+    const stationsList   = document.getElementById("stationsList");
+    const filterCountry  = document.getElementById("filterCountry");
+    const filterTier     = document.getElementById("filterTier");
+
+    async function loadStations() {
+      if (!stationsList) return;
+      stationsList.innerHTML = "<p style='font-size:13px;color:#9ca3af;'>جاري تحميل المحطات...</p>";
+
+      try {
+        const snapshot = await getDocs(collection(db, "stations"));
+        stationsCache = [];
+        const countriesSet = new Set();
+
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          stationsCache.push({
+            id: docSnap.id,
+            ...data
+          });
+          if (data.country) {
+            countriesSet.add(data.country.trim());
+          }
+        });
+
+        // تعبئة قائمة الدول في الفلتر
+        if (filterCountry) {
+          const current = filterCountry.value;
+          filterCountry.innerHTML = '<option value="">كل الدول</option>';
+          Array.from(countriesSet).sort().forEach((c) => {
+            const opt = document.createElement("option");
+            opt.value = c;
+            opt.textContent = c;
+            filterCountry.appendChild(opt);
+          });
+          // إعادة القيمة لو كانت مختارة
+          if (current) filterCountry.value = current;
+        }
+
+        renderStations();
       } catch (err) {
         console.error(err);
-        alert("حدث خطأ أثناء محاولة الدفع");
+        stationsList.innerHTML = "<p style='font-size:13px;color:#f97373;'>تعذر تحميل المحطات من Firebase.</p>";
       }
     }
+
+    function renderStations() {
+      if (!stationsList) return;
+
+      const countryFilter = filterCountry?.value || "";
+      const tierFilter    = filterTier?.value || "";
+
+      const filtered = stationsCache.filter((st) => {
+        let ok = true;
+        if (countryFilter && (st.country || "").trim() !== countryFilter.trim()) ok = false;
+        if (tierFilter && (st.tier || "") !== tierFilter) ok = false;
+        return ok;
+      });
+
+      if (filtered.length === 0) {
+        stationsList.innerHTML = "<p style='font-size:13px;color:#9ca3af;'>لا توجد محطات مطابقة للفلاتر الحالية.</p>";
+        return;
+      }
+
+      stationsList.innerHTML = "";
+      filtered.forEach((st) => {
+        const gpu   = st.gpuType || "GPU";
+        const price = st.pricePerHour ?? 0;
+        const tier  = st.tier || "medium";
+        const country = st.country || "";
+        const city    = st.city || "";
+        const locationLabel = (country || city) ? `${country}${country && city ? " - " : ""}${city}` : "غير محدد";
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="card-header">
+            <span>${gpu}</span>
+            <span class="${tierClass(tier)}">${tierLabel(tier)}</span>
+          </div>
+          <p>المالك: <b>${st.ownerName || "-"}</b></p>
+          <p>الموقع: ${locationLabel}</p>
+          <p>التواصل: ${st.contactMethod || "-"}</p>
+          ${st.notes ? `<p>ملاحظات: ${st.notes}</p>` : ""}
+          <div class="card-footer">
+            <span>السعر: <b>$${price}</b> / ساعة</span>
+            <button
+              class="btn btn-secondary btn-sm"
+              data-id="${st.id}"
+              data-gpu="${gpu}"
+              data-owner="${st.ownerName || ""}"
+              data-location="${locationLabel}"
+              data-tier="${tier}"
+              data-price="${price}"
+              data-contact="${st.contactMethod || ""}"
+              onclick="openRentFromStation(event)"
+            >
+              استئجار الآن
+            </button>
+          </div>
+        `;
+        stationsList.appendChild(card);
+      });
+    }
+
+    if (filterCountry) filterCountry.addEventListener("change", renderStations);
+    if (filterTier)    filterTier.addEventListener("change", renderStations);
 
     loadStations();
+
+    // ---------------- نظام الاستئجار (طلبات بدون دفع) ----------------
+    const rentModalBackdrop = document.getElementById("rentModalBackdrop");
+    const rentForm  = document.getElementById("rentForm");
+    const rentGpu   = document.getElementById("rentGpu");
+    const rentOwner = document.getElementById("rentOwner");
+    const rentLocation = document.getElementById("rentLocation");
+    const rentTier  = document.getElementById("rentTier");
+    const rentPrice = document.getElementById("rentPrice");
+    const rentName  = document.getElementById("rentName");
+    const rentEmail = document.getElementById("rentEmail");
+    const rentHours = document.getElementById("rentHours");
+    const rentNotes = document.getElementById("rentNotes");
+    const rentTotal = document.getElementById("rentTotal");
+    const rentMsg   = document.getElementById("rentMsg");
+    const rentErr   = document.getElementById("rentErr");
+
+    window.openRentFromStation = function (event) {
+      const btn   = event.currentTarget;
+      const gpu   = btn.getAttribute("data-gpu");
+      const owner = btn.getAttribute("data-owner");
+      const loc   = btn.getAttribute("data-location");
+      const tier  = btn.getAttribute("data-tier");
+      const price = parseFloat(btn.getAttribute("data-price") || "0");
+
+      rentGpu.value   = gpu;
+      rentOwner.value = owner || "";
+      rentLocation.value = loc || "";
+      rentTier.value  = tierLabel(tier);
+      rentPrice.value = price.toFixed(2);
+      rentName.value  = "";
+      rentEmail.value = "";
+      rentHours.value = 1;
+      rentNotes.value = "";
+      rentMsg.style.display = "none";
+      rentErr.style.display = "none";
+      updateTotal();
+
+      rentModalBackdrop.style.display = "flex";
+    };
+
+    window.closeRentModal = function () {
+      rentModalBackdrop.style.display = "none";
+    };
+
+    function updateTotal() {
+      const price = parseFloat(rentPrice.value || "0");
+      const hours = parseFloat(rentHours.value || "0");
+      if (!isNaN(price) && !isNaN(hours) && hours > 0) {
+        const total = price * hours;
+        rentTotal.textContent = "الإجمالي التقريبي: $" + total.toFixed(2);
+      } else {
+        rentTotal.textContent = "";
+      }
+    }
+
+    if (rentHours) rentHours.addEventListener("input", updateTotal);
+
+    if (rentForm) {
+      rentForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        rentMsg.style.display = "none";
+        rentErr.style.display = "none";
+
+        const gpu   = rentGpu.value;
+        const owner = rentOwner.value;
+        const location = rentLocation.value;
+        const tier  = rentTier.value;
+        const price = parseFloat(rentPrice.value || "0");
+        const name  = rentName.value.trim();
+        const email = rentEmail.value.trim();
+        const hours = parseFloat(rentHours.value || "0");
+        const notes = rentNotes.value.trim();
+
+        if (!name || !email || hours <= 0) {
+          rentErr.textContent = "الرجاء تعبئة الاسم، وسيلة التواصل، وعدد الساعات بشكل صحيح.";
+          rentErr.style.display = "block";
+          return;
+        }
+
+        try {
+          await addDoc(collection(db, "orders"), {
+            gpu,
+            owner,
+            location,
+            tier,
+            pricePerHour: price,
+            hours,
+            total: price * hours,
+            customerName: name,
+            customerContact: email,
+            notes,
+            status: "pending",
+            createdAt: serverTimestamp()
+          });
+
+          rentMsg.textContent = "تم إرسال طلب الاستئجار بنجاح، سيتم التواصل معك لتأكيد الدفع.";
+          rentMsg.style.display = "block";
+          rentForm.reset();
+          rentTotal.textContent = "";
+        } catch (err) {
+          console.error(err);
+          rentErr.textContent = "حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.";
+          rentErr.style.display = "block";
+        }
+      });
+    }
+
+    // ---------------- نموذج الرسائل للإدارة ----------------
+    const contactForm = document.getElementById("contactForm");
+    const contactMsg  = document.getElementById("contactMsg");
+    const contactErr  = document.getElementById("contactErr");
+
+    if (contactForm) {
+      contactForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        contactMsg.style.display = "none";
+        contactErr.style.display = "none";
+
+        const name    = document.getElementById("contactName").value.trim();
+        const email   = document.getElementById("contactEmail").value.trim();
+        const message = document.getElementById("contactMessage").value.trim();
+
+        if (!name || !message) {
+          contactErr.textContent = "الرجاء تعبئة الاسم والرسالة.";
+          contactErr.style.display = "block";
+          return;
+        }
+
+        try {
+          await addDoc(collection(db, "messages"), {
+            name,
+            contact: email || null,
+            message,
+            createdAt: serverTimestamp()
+          });
+
+          contactMsg.textContent = "تم إرسال رسالتك بنجاح. سيتم مراجعتها.";
+          contactMsg.style.display = "block";
+          contactForm.reset();
+        } catch (err) {
+          console.error(err);
+          contactErr.textContent = "حدث خطأ أثناء إرسال الرسالة. حاول مرة أخرى.";
+          contactErr.style.display = "block";
+        }
+      });
+    }
   </script>
 </body>
-</html>
+  </html>
