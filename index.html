@@ -158,6 +158,27 @@
       <p style="text-align:center;color:#ccc;font-size:14px;">
         هذا فورم تجريبي فقط لعرض فكرة المنصة (لا يتم حفظ البيانات فعلياً بعد).
       </p>
+        <form id="stationForm">
+    <label>اسم صاحب المحطة</label>
+    <input id="owner" type="text" placeholder="مثال: حسين المهري">
+
+    <label>نوع بطاقة الرسوميات (GPU)</label>
+    <select id="gpuType">
+        <option>RTX 4090</option>
+        <option>RTX 4080</option>
+        <option>RTX 3090</option>
+        <option>A100</option>
+        <option>H100</option>
+    </select>
+
+    <label>السعر لكل ساعة (بالدولار)</label>
+    <input id="price" type="number" step="0.01" placeholder="0.50">
+
+    <label>الدولة / المدينة</label>
+    <input id="location" type="text" placeholder="مثال: عمان - صلالة">
+
+    <button type="button" class="btn" id="saveStation">حفظ (تجريبي)</button>
+        </form>
       <form>
         <label>اسم صاحب المحطة</label>
         <input type="text" placeholder="مثال: حسين المهري">
