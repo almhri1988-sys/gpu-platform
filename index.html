@@ -5,290 +5,98 @@
   <title>منصة تأجير وحدات GPU</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #060606;
-      color: #fff;
+    body { margin:0; font-family:Arial,sans-serif; background:#050505; color:#fff; }
+    header { padding:20px; text-align:center; background:#101010; border-bottom:1px solid #222; }
+    header h1 { margin:0; font-size:22px; }
+    header p { margin:6px 0 0; color:#bbb; font-size:13px; }
+    .container { max-width:900px; margin:0 auto; padding:20px; }
+    h2 { text-align:center; margin:20px 0 10px; }
+    .hero-text { text-align:center; color:#ccc; font-size:13px; margin-bottom:20px; }
+    .card { background:#151515; border-radius:12px; padding:18px; box-shadow:0 0 2px #222; margin-bottom:20px; }
+    .card h3 { margin:0 0 8px; }
+    .card p { margin:0; font-size:13px; color:#ccc; }
+    form { display:flex; flex-direction:column; gap:10px; margin-top:10px; }
+    label { font-size:13px; }
+    input, select {
+      padding:9px; border-radius:8px; border:1px solid #333;
+      background:#0f0f0f; color:#fff;
     }
-
-    header {
-      padding: 20px;
-      text-align: center;
-      background: #111;
-      border-bottom: 1px solid #222;
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 24px;
-    }
-
-    header p {
-      margin: 5px 0 0;
-      color: #bbb;
-      font-size: 14px;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    h2 {
-      text-align: center;
-      margin-top: 0;
-      margin-bottom: 10px;
-    }
-
-    .hero-text {
-      text-align: center;
-      color: #ccc;
-      margin-bottom: 25px;
-      font-size: 14px;
-    }
-
-    .cards {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      margin-top: 10px;
-    }
-
-    .card,
-    .gpu-item {
-      background: #151515;
-      border-radius: 12px;
-      padding: 18px;
-      box-shadow: 0 0 1px #222;
-    }
-
-    .card h3 {
-      margin-top: 0;
-      margin-bottom: 8px;
-    }
-
-    .card p {
-      margin: 5px 0;
-      color: #ccc;
-      font-size: 14px;
-    }
-
+    input::placeholder { color:#666; }
     .btn {
-      display: inline-block;
-      padding: 10px 18px;
-      border-radius: 8px;
-      border: none;
-      background: #00ff88;
-      color: #000;
-      font-weight: bold;
-      text-decoration: none;
-      cursor: pointer;
-      margin-top: 10px;
+      display:inline-block; padding:9px 16px; border-radius:8px; border:none;
+      background:#00ff88; color:#000; font-weight:bold; cursor:pointer; font-size:13px; margin-top:8px;
     }
-
-    .btn:hover {
-      opacity: 0.9;
+    .btn.sm { font-size:12px; padding:6px 12px; }
+    .btn:hover { opacity:0.9; }
+    .list { margin-top:15px; display:flex; flex-direction:column; gap:12px; }
+    .item {
+      background:#151515; border-radius:10px; padding:12px; border:1px solid #222;
     }
-
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 10px;
-    }
-
-    label {
-      font-size: 13px;
-      margin-bottom: 3px;
-    }
-
-    input,
-    select {
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #333;
-      background: #0e0e0e;
-      color: #fff;
-    }
-
-    input::placeholder {
-      color: #666;
-    }
-
-    .section-box {
-      margin-top: 35px;
-    }
-
-    .gpu-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 10px;
-    }
-
-    .gpu-item h4 {
-      margin: 0 0 4px;
-      font-size: 15px;
-    }
-
-    .gpu-item small {
-      color: #aaa;
-      display: block;
-      margin-top: 4px;
-      font-size: 12px;
-    }
-
+    .item h4 { margin:0 0 6px; font-size:15px; }
+    .item small { display:block; color:#aaa; font-size:11px; margin-top:4px; }
     footer {
-      margin-top: 40px;
-      padding: 15px;
-      text-align: center;
-      font-size: 12px;
-      color: #777;
-      border-top: 1px solid #111;
-      background: #050505;
-    }
-
-    @media (max-width: 700px) {
-      .container {
-        padding: 15px;
-      }
+      margin-top:40px; padding:15px; text-align:center; font-size:11px;
+      color:#777; border-top:1px solid #111; background:#050505;
     }
   </style>
 </head>
 <body>
   <header>
     <h1>منصة تأجير وحدات GPU</h1>
-    <p>ارفع دخلك عن طريق تأجير كارت الشاشة أو استئجار وحدات قوية لمشاريع الذكاء الاصطناعي</p>
+    <p>اربط أصحاب كروت الشاشة بالمستخدمين، وخذ عمولتك من كل عملية استئجار</p>
   </header>
 
   <main class="container">
-    <!-- قسم ترحيبي -->
-    <section class="section-box">
-      <h2>مرحباً بكم في المنصة</h2>
-      <p class="hero-text">
-        استأجر أو اعرض وحدات معالجة رسومية بأسعار تبدأ من
-        <strong>$0.10</strong> في الساعة (أرقام تجريبية الآن).
-      </p>
+    <!-- تسجيل محطة -->
+    <section>
+      <h2>تسجيل محطة جديدة</h2>
+      <p class="hero-text">أضف بيانات محطتك وسيتم عرضها في قائمة المحطات المتاحة للاستئجار.</p>
 
-      <div class="cards">
-        <div class="card">
-          <h3>تسجيل محطة GPU</h3>
-          <p>ارفع معلومات محطتك ليتمكن الآخرون من استئجار القدرة الحاسوبية لديك.</p>
-          <a href="#host-form" class="btn">تسجيل محطة جديدة</a>
-        </div>
+      <div class="card">
+        <h3>بيانات المحطة</h3>
+        <form id="hostForm">
+          <label>اسم صاحب المحطة</label>
+          <input id="ownerName" placeholder="مثال: حسين المهري" />
 
-        <div class="card">
-          <h3>استئجار GPU</h3>
-          <p>شغّل نماذج الذكاء الاصطناعي والتدريب بسهولة على وحدات قوية وسريعة.</p>
-          <a href="#rent" class="btn">عرض الوحدات المتاحة</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- نموذج تسجيل المحطة (حقيقي مع Firebase) -->
-    <section class="section-box" id="host-form">
-      <h2>تسجيل محطة جديدة (حقيقي)</h2>
-      <p class="hero-text">
-        هذا النموذج حقيقي ويحفظ البيانات فعلياً في Firebase. يمكنك إضافة محطتك واختبار النظام.
-      </p>
-
-      <form id="stationForm">
-        <div>
-          <label for="ownerName">اسم صاحب المحطة</label>
-          <input
-            type="text"
-            id="ownerName"
-            name="ownerName"
-            placeholder="مثال: حسين المهري"
-          />
-        </div>
-
-        <div>
-          <label for="gpuType">نوع بطاقة الرسوميات (GPU)</label>
-          <select id="gpuType" name="gpuType">
+          <label>نوع بطاقة GPU</label>
+          <select id="gpuType">
             <option value="RTX 4090">RTX 4090</option>
             <option value="RTX 4080">RTX 4080</option>
             <option value="RTX 3090">RTX 3090</option>
             <option value="A100">A100</option>
+            <option value="H100">H100</option>
             <option value="Other">نوع آخر</option>
           </select>
-        </div>
 
-        <div>
-          <label for="pricePerHour">السعر لكل ساعة (بالدولار)</label>
-          <input
-            type="number"
-            step="0.01"
-            id="pricePerHour"
-            name="pricePerHour"
-            placeholder="0.50"
-          />
-        </div>
+          <label>السعر لكل ساعة (بالدولار)</label>
+          <input id="pricePerHour" type="number" step="0.01" placeholder="0.50" />
 
-        <div>
-          <label for="location">الدولة / المدينة</label>
-          <input
-            type="text"
-            id="location"
-            name="location"
-            placeholder="مثال: عُمان - صلالة"
-          />
-        </div>
+          <label>الدولة / المدينة</label>
+          <input id="location" placeholder="مثال: عُمان - صلالة" />
 
-        <button type="submit" class="btn">حفظ المحطة</button>
-      </form>
-    </section>
-
-    <!-- قسم عرض المحطات الحقيقية من Firebase -->
-    <section class="section-box" id="real-stations">
-      <h2>المحطات الحقيقية المسجلة</h2>
-      <p class="hero-text">
-        يتم تحميل المحطات المسجلة من قاعدة البيانات وعرضها هنا.
-      </p>
-      <div id="stationsList" class="gpu-list">
-        <!-- يتم ملؤها من JavaScript -->
+          <button type="submit" class="btn">حفظ المحطة</button>
+        </form>
       </div>
     </section>
 
-    <!-- قسم وحدات تجريبية ثابتة -->
-    <section class="section-box" id="rent">
-      <h2>وحدات GPU المتاحة (تجريبية)</h2>
-      <div class="gpu-list">
-        <div class="gpu-item">
-          <h4>RTX 4090 - 24GB</h4>
-          <span>0.60$ / ساعة</span>
-          <small>مناسبة لتدريب النماذج المتوسطة وتشغيل بوتات الذكاء.</small>
-        </div>
-
-        <div class="gpu-item">
-          <h4>RTX 3090 - 24GB</h4>
-          <span>0.40$ / ساعة</span>
-          <small>خيار اقتصادي للتجارب والمشاريع الصغيرة.</small>
-        </div>
-
-        <div class="gpu-item">
-          <h4>A100 - 40GB</h4>
-          <span>2.00$ / ساعة</span>
-          <small>قوة عالية لمشاريع الذكاء الاصطناعي الثقيلة جداً.</small>
-        </div>
+    <!-- عرض المحطات -->
+    <section>
+      <h2>المحطات المتاحة للاستئجار</h2>
+      <p class="hero-text">اختر المحطة المناسبة ثم حدد عدد الساعات وأكمل الدفع.</p>
+      <div id="stationsList" class="list">
+        <p style="color:#aaa;font-size:12px;">جاري تحميل المحطات...</p>
       </div>
-
-      <p class="hero-text" style="margin-top: 15px; color: #888; font-size: 13px;">
-        لاحقاً يمكن ربط هذه القائمة بالكامل بقاعدة بيانات Firebase لعرض وحدات حقيقية من أصحاب المحطات.
-      </p>
     </section>
   </main>
 
   <footer>
-    <p>منصة تجريبية لتأجير وحدات معالجة الرسوميات GPU – يمكن تطويرها لاحقاً لتصبح مشروعاً تجارياً كاملاً.</p>
+    منصة تأجير وحدات GPU - نموذج جاهز قابل للتطوير والربط مع بوابات دفع وشركاء عالميين.
   </footer>
 
-  <!-- Firebase + Firestore (كود إنجليزي حتى لا يخبصه المترجم) -->
+  <!-- Firebase + Frontend Logic -->
   <script type="module">
+    // Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
     import {
       getFirestore,
       collection,
@@ -296,7 +104,7 @@
       getDocs
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // YOUR FIREBASE CONFIG
+    // ⚠️ استخدم نفس الإعدادات التي عندك (هذا مثال من مشروعك)
     const firebaseConfig = {
       apiKey: "AIzaSyBAC-051sVaiI9gF-9AmP_3ltGfRfrfrzw",
       authDomain: "gpu-platform-ca19e.firebaseapp.com",
@@ -307,57 +115,22 @@
       measurementId: "G-5RJJN1DWDL"
     };
 
-    // INIT
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
     const db = getFirestore(app);
 
-    const form = document.getElementById("stationForm");
+    const hostForm = document.getElementById("hostForm");
     const stationsList = document.getElementById("stationsList");
 
-    async function loadStations() {
-      stationsList.innerHTML = "<p>جاري تحميل المحطات...</p>";
-      try {
-        const snapshot = await getDocs(collection(db, "stations"));
-        if (snapshot.empty) {
-          stationsList.innerHTML =
-            "<p>لا توجد محطات مسجلة حتى الآن. كن أول من يضيف محطة!</p>";
-          return;
-        }
-
-        stationsList.innerHTML = "";
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          const card = document.createElement("div");
-          card.className = "gpu-item";
-          card.innerHTML = `
-            <h4>${data.gpuType || "GPU"}</h4>
-            <span>${data.pricePerHour || 0} $ / ساعة</span>
-            <small>
-              المالك: ${data.ownerName || "غير معروف"} – الموقع: ${
-            data.location || "غير محدد"
-          }
-            </small>
-          `;
-          stationsList.appendChild(card);
-        });
-      } catch (error) {
-        console.error(error);
-        stationsList.innerHTML =
-          "<p>حدث خطأ أثناء تحميل البيانات من الخادم.</p>";
-      }
-    }
-
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-
-      const ownerName = form.ownerName.value.trim();
-      const gpuType = form.gpuType.value;
-      const pricePerHour = parseFloat(form.pricePerHour.value);
-      const location = form.location.value.trim();
+    // حفظ محطة جديدة في Firestore
+    hostForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const ownerName = document.getElementById("ownerName").value.trim();
+      const gpuType = document.getElementById("gpuType").value;
+      const pricePerHour = parseFloat(document.getElementById("pricePerHour").value);
+      const location = document.getElementById("location").value.trim();
 
       if (!ownerName || !gpuType || !pricePerHour || !location) {
-        alert("رجاءً عبئ جميع الحقول أولاً.");
+        alert("رجاءً عبئ جميع الحقول.");
         return;
       }
 
@@ -369,17 +142,83 @@
           location,
           createdAt: new Date().toISOString()
         });
-
-        alert("تم حفظ المحطة بنجاح!");
-        form.reset();
+        alert("تم حفظ المحطة بنجاح");
+        hostForm.reset();
         loadStations();
-      } catch (error) {
-        console.error(error);
-        alert("حدث خطأ أثناء حفظ البيانات.");
+      } catch (err) {
+        console.error(err);
+        alert("خطأ أثناء الحفظ");
       }
     });
 
-    // أول ما تفتح الصفحة
+    // تحميل المحطات من Firestore
+    async function loadStations() {
+      stationsList.innerHTML = "<p style='color:#aaa;font-size:12px;'>جاري تحميل المحطات...</p>";
+      try {
+        const snap = await getDocs(collection(db, "stations"));
+        if (snap.empty) {
+          stationsList.innerHTML = "<p style='color:#777;font-size:12px;'>لا توجد محطات مسجلة حتى الآن.</p>";
+          return;
+        }
+
+        stationsList.innerHTML = "";
+        snap.forEach((doc) => {
+          const data = doc.data();
+          const div = document.createElement("div");
+          div.className = "item";
+          div.innerHTML = `
+            <h4>${data.gpuType || "GPU"}</h4>
+            <small>المالك: ${data.ownerName || "غير معروف"} – ${data.location || "غير محدد"}</small>
+            <small>السعر: ${data.pricePerHour || 0} $ / ساعة</small>
+            <div style="margin-top:8px;">
+              <label style="font-size:11px;">عدد الساعات:</label>
+              <input type="number" min="1" step="1" value="1"
+                     style="width:60px;padding:4px 6px;border-radius:6px;border:1px solid #333;background:#000;color:#fff;font-size:11px;" />
+              <button class="btn sm">استئجار الآن</button>
+            </div>
+          `;
+          const hoursInput = div.querySelector("input");
+          const rentBtn = div.querySelector("button");
+
+          rentBtn.addEventListener("click", async () => {
+            const hours = parseInt(hoursInput.value, 10);
+            if (!hours || hours <= 0) {
+              alert("أدخل عدد ساعات صحيح");
+              return;
+            }
+            await rentStation(doc.id, hours);
+          });
+
+          stationsList.appendChild(div);
+        });
+      } catch (err) {
+        console.error(err);
+        stationsList.innerHTML = "<p style='color:#f66;font-size:12px;'>خطأ أثناء قراءة البيانات.</p>";
+      }
+    }
+
+    // استئجار محطة – استدعاء دالة الدفع
+    async function rentStation(stationId, hours) {
+      try {
+        const res = await fetch("https://<REGION>-<PROJECT-ID>.cloudfunctions.net/createCheckoutSession", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ stationId, hours })
+        });
+
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url; // فتح صفحة Stripe
+        } else {
+          alert("تعذر إنشاء جلسة الدفع");
+          console.error(data);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("حدث خطأ أثناء محاولة الدفع");
+      }
+    }
+
     loadStations();
   </script>
 </body>
