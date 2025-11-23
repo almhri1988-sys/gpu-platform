@@ -12,7 +12,7 @@
       color: #f9fafb;
     }
     .container {
-      max-width: 900px;
+      max-width: 1000px;
       margin: 0 auto;
       padding: 20px 16px 40px;
     }
@@ -51,6 +51,14 @@
       min-height: 70px;
       resize: vertical;
     }
+    input::placeholder, textarea::placeholder {
+      color: #6b7280;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #22c55e;
+      box-shadow: 0 0 0 1px #22c55e33;
+    }
     button {
       width: 100%;
       padding: 10px 14px;
@@ -63,6 +71,7 @@
       cursor: pointer;
       margin-top: 4px;
     }
+    button:hover { opacity: 0.95; }
 
     .stations-list {
       display: flex;
@@ -81,6 +90,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
     }
     .station-name {
       font-weight: 600;
@@ -103,10 +113,39 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
     }
     .small-input {
       width: 80px;
     }
+    .footer-text {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 11px;
+      color: #6b7280;
+    }
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 12px;
+    }
+    .admin-table th, .admin-table td {
+      border: 1px solid #374151;
+      padding: 6px 4px;
+      text-align: center;
+    }
+    .admin-table th {
+      background: #111827;
+    }
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+    }
+    .pill-owner { background:#1d4ed8; }
+    .pill-platform { background:#16a34a; }
   </style>
 </head>
 
@@ -118,24 +157,24 @@
     <section>
       <h2>تسجيل محطة جديدة</h2>
       <form id="stationForm">
-        
         <label>اسم صاحب المحطة</label>
         <input id="ownerName" placeholder="مثال: حسين المهري" required />
 
         <label>وسيلة تواصل المالك (لن تظهر للزوار)</label>
-        <input id="contactMethod" placeholder="مثال: واتساب أو إيميل" required />
+        <input id="contactMethod" placeholder="مثال: واتساب أو إيميل للمالك" required />
 
-        <label>نوع بطاقة الرسومات</label>
+        <label>نوع بطاقة الرسومات (GPU)</label>
         <select id="gpuType" required>
           <option value="RTX 4090">RTX 4090</option>
           <option value="RTX 4080">RTX 4080</option>
           <option value="RTX 3090">RTX 3090</option>
           <option value="A100">A100</option>
           <option value="H100">H100</option>
+          <option value="أخرى">بطاقة أخرى</option>
         </select>
 
-        <label>السعر لكل ساعة</label>
-        <input type="number" id="pricePerHour" step="0.01" placeholder="مثال: 0.50" required />
+        <label>السعر لكل ساعة (بالدولار)</label>
+        <input type="number" id="pricePerHour" step="0.01" min="0" placeholder="مثال: 0.50" required />
 
         <label>الدولة</label>
         <input id="country" placeholder="مثال: عُمان" required />
@@ -144,54 +183,77 @@
         <input id="city" placeholder="مثال: صلالة" required />
 
         <label>بيانات استلام أرباح المالك (لن تظهر للزوار)</label>
-        <textarea id="ownerPayoutInfo" placeholder="حساب بنكي / PayPal"></textarea>
+        <textarea id="ownerPayoutInfo" placeholder="مثال: IBAN / رقم حساب / رابط PayPal للمالك"></textarea>
 
-        <label>ملاحظات (اختياري)</label>
-        <textarea id="notes" placeholder="مثال: اتصال سريع، تبريد ممتاز..."></textarea>
+        <label>ملاحظات عن المحطة (اختياري)</label>
+        <textarea id="notes" placeholder="مثال: اتصال إنترنت سريع، متوفر أغلب اليوم..."></textarea>
 
         <button type="submit">حفظ المحطة</button>
       </form>
     </section>
 
-    <!-- المحطات -->
+    <!-- المحطات المتاحة -->
     <section>
       <h2>المحطات المتاحة للاستئجار</h2>
-      <div id="stationsList" class="stations-list"></div>
+      <div id="stationsList" class="stations-list">
+        <p class="muted">جاري تحميل المحطات...</p>
+      </div>
     </section>
 
-    <!-- رسالة الإدارة -->
+    <!-- رسالة للإدارة -->
     <section>
       <h2>رسالة للإدارة</h2>
       <form id="adminForm">
         <label>اسمك</label>
-        <input id="adminName" required />
+        <input id="adminName" placeholder="اكتب اسمك هنا" required />
 
         <label>وسيلة التواصل</label>
-        <input id="adminContact" required />
+        <input id="adminContact" placeholder="مثال: بريد إلكتروني أو رقم واتساب" required />
 
         <label>نوع الرسالة</label>
         <select id="adminType">
           <option value="استفسار">استفسار</option>
-          <option value="مشكلة">بلاغ</option>
-          <option value="اقتراح">اقتراح</option>
+          <option value="مشكلة">بلاغ عن مشكلة</option>
+          <option value="اقتراح">اقتراح تطوير</option>
         </select>
 
         <label>محتوى الرسالة</label>
-        <textarea id="adminMessage" required></textarea>
+        <textarea id="adminMessage" placeholder="اكتب رسالتك أو استفسارك بالتفصيل" required></textarea>
 
-        <button>إرسال</button>
+        <button type="submit">إرسال الرسالة</button>
       </form>
     </section>
 
+    <!-- لوحة الإدارة (ملخص أرباح المنصة والملاك) -->
+    <section>
+      <h2>لوحة الإدارة (ملخص الأرباح)</h2>
+      <p class="muted">
+        هذا القسم يظهر لك إجمالي الساعات والمبالغ لكل محطة، ونصيب المنصة ونصيب صاحب المحطة،
+        حسب الطلبات المسجلة في النظام.
+      </p>
+      <button type="button" id="refreshDashboardBtn">تحديث الإحصائيات</button>
+      <div id="adminDashboard"></div>
+    </section>
+
+    <div class="footer-text">
+      منصة تأجير وحدات GPU – الدفع يتم حاليًا عبر PayPal لحساب المنصة، ويتم حساب نصيب المنصة وصاحب المحطة لكل عملية استئجار.
+    </div>
   </div>
 
-  <!-- firebase -->
+  <!-- firebase + منطق المنصة -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, getDocs, orderBy, query, serverTimestamp
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs,
+      query,
+      orderBy,
+      serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+    // إعداد Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBAC-051sVaiI9gF-9AmP_3ltGfRfrfrzw",
       authDomain: "gpu-platform-ca19e.firebaseapp.com",
@@ -204,125 +266,299 @@
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
 
-    // ضع حسابك هنا
-    const PAYPAL_USERNAME = "YOUR_PAYPAL_USERNAME";
-    const PLATFORM_PERCENT = 0.20;
+    // حساب PayPal الخاص بالمنصة (حقك أنت)
+    const PAYPAL_USERNAME   = "Hussain4090";   // هذا رابطك paypal.me/Hussain4090
+    const PLATFORM_PERCENT  = 0.20;            // نسبتك (20%)
 
-    const stationForm  = document.getElementById("stationForm");
-    const stationsList = document.getElementById("stationsList");
-    const adminForm    = document.getElementById("adminForm");
+    const stationForm   = document.getElementById("stationForm");
+    const stationsList  = document.getElementById("stationsList");
+    const adminForm     = document.getElementById("adminForm");
+    const adminDashboard= document.getElementById("adminDashboard");
+    const refreshDashBtn= document.getElementById("refreshDashboardBtn");
 
-    // إضافة محطة
+    // إضافة محطة جديدة
     stationForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const data = {
-        ownerName:       ownerName.value,
-        contactMethod:   contactMethod.value,
-        gpuType:         gpuType.value,
-        pricePerHour:    parseFloat(pricePerHour.value),
-        country:         country.value,
-        city:            city.value,
-        ownerPayoutInfo: ownerPayoutInfo.value,
-        notes:           notes.value,
-        createdAt:       serverTimestamp()
-      };
+      const ownerName       = document.getElementById("ownerName").value.trim();
+      const contactMethod   = document.getElementById("contactMethod").value.trim();
+      const gpuType         = document.getElementById("gpuType").value;
+      const pricePerHour    = parseFloat(document.getElementById("pricePerHour").value);
+      const country         = document.getElementById("country").value.trim();
+      const city            = document.getElementById("city").value.trim();
+      const ownerPayoutInfo = document.getElementById("ownerPayoutInfo").value.trim();
+      const notes           = document.getElementById("notes").value.trim();
 
-      await addDoc(collection(db, "stations"), data);
-      alert("تم حفظ المحطة بنجاح");
-      stationForm.reset();
-      loadStations();
+      if (!ownerName || !contactMethod || isNaN(pricePerHour)) {
+        alert("الرجاء تعبئة الاسم، وسيلة التواصل، والسعر بشكل صحيح.");
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "stations"), {
+          ownerName,
+          contactMethod,
+          gpuType,
+          pricePerHour,
+          country,
+          city,
+          ownerPayoutInfo,
+          notes,
+          createdAt: serverTimestamp()
+        });
+        alert("تم حفظ المحطة بنجاح ✅");
+        stationForm.reset();
+        loadStations();
+      } catch (err) {
+        console.error(err);
+        alert("حدث خطأ أثناء حفظ المحطة. تأكد من إعدادات Firebase.");
+      }
     });
 
     // تحميل المحطات
     async function loadStations() {
-      stationsList.innerHTML = "<p class='muted'>جاري التحميل...</p>";
+      stationsList.innerHTML = "<p class='muted'>جاري تحميل المحطات...</p>";
 
-      const q = query(collection(db, "stations"), orderBy("createdAt", "desc"));
-      const snapshot = await getDocs(q);
+      try {
+        const qStations = query(
+          collection(db, "stations"),
+          orderBy("createdAt", "desc")
+        );
+        const snapshot = await getDocs(qStations);
 
-      stationsList.innerHTML = "";
+        if (snapshot.empty) {
+          stationsList.innerHTML = "<p class='muted'>لا توجد محطات مسجلة حتى الآن.</p>";
+          return;
+        }
 
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        const id = doc.id;
+        stationsList.innerHTML = "";
 
-        const card = document.createElement("div");
-        card.classList.add("station-card");
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const id   = docSnap.id;
 
-        card.innerHTML = `
-          <div class="station-header">
-            <div>
-              <div class="station-name">${d.gpuType}</div>
-              <div class="muted">المالك: ${d.ownerName}</div>
-              <div class="muted">الموقع: ${d.country} - ${d.city}</div>
+          const price = data.pricePerHour ? Number(data.pricePerHour) : 0;
+          const priceText = price
+            ? `$${price.toFixed(2)} / ساعة`
+            : "غير محدد";
+
+          const card = document.createElement("div");
+          card.className = "station-card";
+
+          card.innerHTML = `
+            <div class="station-header">
+              <div>
+                <div class="station-name">${data.gpuType || "GPU"}</div>
+                <div class="muted">المالك: ${data.ownerName || "-"}</div>
+                <div class="muted">
+                  الموقع: ${data.country || ""}${data.country && data.city ? " - " : ""}${data.city || ""}
+                </div>
+              </div>
+              <div class="price-badge">${priceText}</div>
             </div>
-            <div class="price-badge">$${d.pricePerHour} / ساعة</div>
-          </div>
+            ${data.notes ? `<div class="muted">ملاحظات: ${data.notes}</div>` : ""}
+            <div class="row">
+              <div>
+                <label style="font-size:12px;">عدد الساعات</label>
+                <input id="hours-${id}" class="small-input" type="number" min="1" value="1" />
+              </div>
+              <div style="flex:1;">
+                <button type="button" onclick="rentStation('${id}', ${price || 0})">
+                  استئجار الآن
+                </button>
+              </div>
+            </div>
+          `;
 
-          ${d.notes ? `<div class="muted">ملاحظات: ${d.notes}</div>` : ""}
-
-          <div class="row">
-            <input class="small-input" id="hours-${id}" type="number" min="1" value="1" />
-            <button onclick="rentStation('${id}', ${d.pricePerHour})">
-              استئجار الآن
-            </button>
-          </div>
-        `;
-
-        stationsList.appendChild(card);
-      });
+          stationsList.appendChild(card);
+        });
+      } catch (err) {
+        console.error(err);
+        stationsList.innerHTML = "<p class='muted'>حدث خطأ أثناء تحميل المحطات.</p>";
+      }
     }
 
-    // استئجار محطة
-    window.rentStation = async function (id, price) {
-      const hours = parseFloat(document.getElementById(`hours-${id}`).value);
+    // استئجار محطة: حساب المبالغ + تسجيل الطلب + تحويل إلى PayPal
+    window.rentStation = async function (stationId, pricePerHour) {
+      const hoursInput = document.getElementById(`hours-${stationId}`);
+      const hours = parseInt(hoursInput?.value || "0", 10);
 
-      if (hours <= 0) return alert("عدد ساعات غير صحيح");
+      if (!hours || hours <= 0) {
+        alert("الرجاء إدخال عدد ساعات صحيح.");
+        return;
+      }
 
-      const total      = hours * price;
-      const platform   = total * PLATFORM_PERCENT;
-      const owner      = total - platform;
+      if (!pricePerHour || pricePerHour <= 0) {
+        alert("السعر غير مضبوط لهذه المحطة.");
+        return;
+      }
 
-      if (!confirm(
-        `عدد الساعات: ${hours}\n` +
-        `إجمالي الدفع: $${total.toFixed(2)}\n` +
-        `نسبتك: $${platform.toFixed(2)}\n` +
-        `نصيب المالك: $${owner.toFixed(2)}\n\nهل تريد متابعة الدفع؟`
-      )) return;
+      const total          = hours * pricePerHour;
+      const platformAmount = total * PLATFORM_PERCENT;
+      const ownerAmount    = total - platformAmount;
 
-      await addDoc(collection(db, "rentalRequests"), {
-        stationId: id,
-        hours,
-        total,
-        platform,
-        owner,
-        createdAt: serverTimestamp()
-      });
+      const confirmMsg =
+        `ستقوم باستئجار هذه المحطة لمدة ${hours} ساعة.\n` +
+        `المبلغ الكلي: $${total.toFixed(2)}\n` +
+        `نسبة المنصة (تقريبًا): $${platformAmount.toFixed(2)}\n` +
+        `نصيب المالك (تقريبًا): $${ownerAmount.toFixed(2)}\n\n` +
+        `هل تريد المتابعة للدفع عبر PayPal؟`;
 
-      if (PAYPAL_USERNAME === "YOUR_PAYPAL_USERNAME")
-        return alert("غيّر PAYPAL_USERNAME في الكود!");
+      if (!confirm(confirmMsg)) return;
 
-      window.location.href = 
-        `https://paypal.me/${PAYPAL_USERNAME}/${total.toFixed(2)}`;
+      try {
+        await addDoc(collection(db, "rentalRequests"), {
+          stationId,
+          hours,
+          pricePerHour,
+          total,
+          platformAmount,
+          ownerAmount,
+          createdAt: serverTimestamp(),
+          status: "جديد"
+        });
+
+        const paypalUrl = `https://paypal.me/${PAYPAL_USERNAME}/${total.toFixed(2)}`;
+        window.location.href = paypalUrl;
+
+      } catch (err) {
+        console.error(err);
+        alert("حدث خطأ أثناء تسجيل طلب الاستئجار.");
+      }
     };
 
     // رسالة الإدارة
     adminForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      await addDoc(collection(db, "adminMessages"), {
-        name: adminName.value,
-        contact: adminContact.value,
-        type: adminType.value,
-        message: adminMessage.value,
-        createdAt: serverTimestamp()
-      });
+      const name    = document.getElementById("adminName").value.trim();
+      const contact = document.getElementById("adminContact").value.trim();
+      const type    = document.getElementById("adminType").value;
+      const message = document.getElementById("adminMessage").value.trim();
 
-      alert("تم إرسال الرسالة");
-      adminForm.reset();
+      if (!name || !contact || !message) {
+        alert("الرجاء تعبئة جميع الحقول في رسالة الإدارة.");
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "adminMessages"), {
+          name,
+          contact,
+          type,
+          message,
+          createdAt: serverTimestamp(),
+          status: "جديد"
+        });
+
+        alert("تم إرسال الرسالة للإدارة ✅");
+        adminForm.reset();
+      } catch (err) {
+        console.error(err);
+        alert("حدث خطأ أثناء إرسال الرسالة.");
+      }
     });
 
+    // لوحة الإدارة: ملخص أرباح كل محطة
+    async function loadDashboard() {
+      adminDashboard.innerHTML = "<p class='muted'>جاري تحميل الإحصائيات...</p>";
+
+      try {
+        // نجيب المحطات
+        const stationsSnap = await getDocs(collection(db, "stations"));
+        const stationsMap = {};
+        stationsSnap.forEach((docSnap) => {
+          stationsMap[docSnap.id] = docSnap.data();
+        });
+
+        // نجيب الطلبات
+        const reqSnap = await getDocs(
+          query(collection(db, "rentalRequests"), orderBy("createdAt", "desc"))
+        );
+
+        if (reqSnap.empty) {
+          adminDashboard.innerHTML = "<p class='muted'>لا توجد طلبات استئجار حتى الآن.</p>";
+          return;
+        }
+
+        // نجمع المبالغ حسب كل محطة
+        const summary = {}; // stationId -> {hours, total, platform, owner}
+        reqSnap.forEach((docSnap) => {
+          const d = docSnap.data();
+          const sid = d.stationId;
+          if (!summary[sid]) {
+            summary[sid] = {
+              hours: 0,
+              total: 0,
+              platform: 0,
+              owner: 0
+            };
+          }
+          summary[sid].hours    += Number(d.hours || 0);
+          summary[sid].total    += Number(d.total || 0);
+          summary[sid].platform += Number(d.platformAmount || 0);
+          summary[sid].owner    += Number(d.ownerAmount || 0);
+        });
+
+        // نبني الجدول
+        let html = `
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>المحطة</th>
+                <th>الموقع</th>
+                <th>إجمالي الساعات</th>
+                <th>إجمالي المبلغ</th>
+                <th>نصيب المنصة</th>
+                <th>نصيب المالك</th>
+                <th>بيانات تحويل المالك</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        Object.keys(summary).forEach((sid) => {
+          const sData = stationsMap[sid] || {};
+          const sSum  = summary[sid];
+
+          html += `
+            <tr>
+              <td>
+                ${sData.gpuType || "GPU"}<br/>
+                <span class="muted">${sData.ownerName || ""}</span>
+              </td>
+              <td>${(sData.country || "")}${sData.country && sData.city ? " - " : ""}${sData.city || ""}</td>
+              <td>${sSum.hours.toFixed(0)}</td>
+              <td>$${sSum.total.toFixed(2)}</td>
+              <td>
+                <span class="pill pill-platform">$${sSum.platform.toFixed(2)}</span>
+              </td>
+              <td>
+                <span class="pill pill-owner">$${sSum.owner.toFixed(2)}</span>
+              </td>
+              <td style="text-align:right;">
+                <span class="muted">
+                  ${sData.ownerPayoutInfo
+                    ? sData.ownerPayoutInfo.replace(/\n/g, "<br/>")
+                    : "لم يتم إدخال بيانات التحويل للمالك"}
+                </span>
+              </td>
+            </tr>
+          `;
+        });
+
+        html += "</tbody></table>";
+        adminDashboard.innerHTML = html;
+
+      } catch (err) {
+        console.error(err);
+        adminDashboard.innerHTML = "<p class='muted'>حدث خطأ أثناء تحميل الإحصائيات.</p>";
+      }
+    }
+
+    refreshDashBtn.addEventListener("click", loadDashboard);
+
+    // تشغيل أولي
     loadStations();
   </script>
 </body>
