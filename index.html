@@ -2,11 +2,13 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>منصة تأجير وحدات GPU</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- ✅ استبدل YOUR_LIVE_PAYPAL_CLIENT_ID_HERE بالـ Client ID الحقيقي من PayPal -->
-  <script src="https://www.paypal.com/sdk/js?client-id=YOUR_LIVE_PAYPAL_CLIENT_ID_HERE&currency=USD"></script>
+  <!-- PayPal JS SDK (استبدل CLIENT_ID لاحقاً) -->
+  <script
+    src="https://www.paypal.com/sdk/js?client-id=YOUR_LIVE_PAYPAL_CLIENT_ID_HERE&currency=USD">
+  </script>
 
   <style>
     * {
@@ -16,620 +18,954 @@
     }
 
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-        sans-serif;
-      background: radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
-      color: #e5e7eb;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #111827 0, #020617 40%, #000 100%);
+      color: #f9fafb;
       min-height: 100vh;
-      direction: rtl;
     }
 
-    .container {
-      max-width: 1100px;
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      max-width: 1180px;
       margin: 0 auto;
       padding: 16px 16px 80px;
     }
 
-    /* شريط علوي متحرك */
-    .top-banner-wrapper {
+    /* الشريط المتحرك */
+    .promo-bar {
+      margin: 8px auto 14px;
+      max-width: 1180px;
+      border-radius: 999px;
+      padding: 6px 0;
+      background: linear-gradient(90deg,#22c55e,#0ea5e9,#6366f1,#ec4899,#22c55e);
+      background-size: 300% 100%;
+      animation: slide-gradient 10s linear infinite;
+      overflow: hidden;
       position: sticky;
       top: 0;
       z-index: 20;
-      background: linear-gradient(90deg, #22c55e, #0ea5e9, #a855f7);
-      padding: 6px 0;
-      overflow: hidden;
+    }
+    @keyframes slide-gradient {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
     }
 
-    .top-banner {
+    .promo-text {
       white-space: nowrap;
-      display: inline-block;
-      padding-inline-start: 100%;
-      animation: marquee 20s linear infinite;
-      color: #0f172a;
       font-size: 13px;
+      color: #0b1120;
       font-weight: 600;
-    }
-
-    .top-banner span {
-      margin-inline: 18px;
+      animation: marquee 15s linear infinite;
+      padding-inline: 16px;
     }
 
     @keyframes marquee {
-      0% {
-        transform: translateX(0);
-      }
-      100% {
-        transform: translateX(-100%);
-      }
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
     }
 
+    .promo-text span {
+      margin-inline: 32px;
+    }
+
+    /* الهيدر */
     .hero {
-      border-radius: 18px;
-      padding: 20px;
-      margin-top: 18px;
+      border-radius: 22px;
+      padding: 20px 18px 22px;
       margin-bottom: 18px;
-      background: radial-gradient(circle at top left, #1f2937 0, #020617 70%);
-      position: relative;
-      overflow: hidden;
+      border: 1px solid rgba(148,163,184,0.35);
+      background:
+        radial-gradient(circle at top left,#1f2937 0,transparent 55%),
+        radial-gradient(circle at top right,#0f172a 0,transparent 55%),
+        rgba(15,23,42,0.96);
+      box-shadow:
+        0 18px 60px rgba(15,23,42,0.9),
+        0 0 0 1px rgba(15,23,42,0.8);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    .hero::before {
-      content: "";
-      position: absolute;
-      inset: -120px;
-      background: radial-gradient(circle at top, rgba(56, 189, 248, 0.22), transparent 60%);
-      opacity: 0.9;
-      pointer-events: none;
+    .hero-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
-    .hero-inner {
-      position: relative;
-      z-index: 1;
+    .title {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
 
-    .hero-title {
-      font-size: 26px;
+    .title h1 {
+      font-size: 22px;
       font-weight: 800;
-      margin-bottom: 6px;
-      color: #f9fafb;
-      letter-spacing: 0.03em;
+      letter-spacing: .03em;
     }
 
-    .hero-sub {
-      font-size: 14px;
+    .title p {
+      font-size: 13px;
       color: #cbd5f5;
-      margin-bottom: 10px;
     }
 
-    .hero-badges {
+    .pill-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 12px;
-      font-size: 12px;
-    }
-
-    .badge {
-      padding: 4px 9px;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      background: rgba(15, 23, 42, 0.75);
+      gap: 6px;
+      margin-top: 6px;
+      font-size: 11px;
       color: #e5e7eb;
     }
 
-    .badge-primary {
-      background: linear-gradient(90deg, #22c55e, #14b8a6);
+    .pill {
+      border-radius: 999px;
+      padding: 4px 10px;
+      border: 1px solid rgba(148,163,184,0.5);
+      background: linear-gradient(135deg,rgba(15,23,42,0.9),rgba(30,64,175,0.9));
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 0 0 1px rgba(15,23,42,0.9);
+    }
+
+    .pill.green {
+      border-color: rgba(52,211,153,0.9);
+      background: linear-gradient(135deg,#16a34a,#22c55e);
       color: #022c22;
-      border-color: transparent;
       font-weight: 700;
     }
 
-    .hero-note {
-      font-size: 12px;
-      color: #9ca3af;
+    .pill small {
+      opacity: .9;
+      font-size: 10px;
     }
 
-    .hero-note strong {
-      color: #facc15;
+    .pill-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: radial-gradient(circle,#bbf7d0 0,#16a34a 55%,#052e16 100%);
+      box-shadow: 0 0 12px #22c55e;
     }
 
-    .section-title {
-      font-size: 18px;
-      font-weight: 700;
-      margin: 10px 0 8px;
+    /* لوحة إدارة المحطات */
+    .owner-panel-wrap {
+      margin-bottom: 16px;
+    }
+
+    .toggle-owner-btn {
+      width: 100%;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid rgba(148,163,184,0.5);
+      background: radial-gradient(circle at top,#0f172a,#020617);
       color: #e5e7eb;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
+      cursor: pointer;
     }
 
-    .section-title span {
+    .toggle-owner-btn span.badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(34,197,94,0.1);
+      border: 1px solid rgba(34,197,94,0.6);
+      color: #4ade80;
+    }
+
+    .owner-panel {
+      margin-top: 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(148,163,184,0.35);
+      background: rgba(15,23,42,0.96);
+      padding: 16px 14px 14px;
+      display: none;
+    }
+
+    .owner-panel.visible {
+      display: block;
+    }
+
+    .owner-panel h2 {
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .owner-panel small {
       font-size: 11px;
-      font-weight: 500;
       color: #9ca3af;
     }
 
-    .grid {
+    .owner-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-      gap: 14px;
+      grid-template-columns: repeat(auto-fit,minmax(230px,1fr));
+      gap: 10px;
+      margin-top: 12px;
     }
 
-    @media (max-width: 780px) {
-      .grid {
-        grid-template-columns: minmax(0, 1fr);
-      }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+    }
+
+    .field label {
+      color: #e5e7eb;
+    }
+
+    .field input,
+    .field textarea,
+    .field select {
+      border-radius: 12px;
+      border: 1px solid rgba(148,163,184,0.7);
+      background: rgba(15,23,42,0.96);
+      padding: 8px 9px;
+      color: #e5e7eb;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .field input:focus,
+    .field textarea:focus,
+    .field select:focus {
+      border-color: #22c55e;
+      box-shadow: 0 0 0 1px rgba(34,197,94,0.4);
+    }
+
+    .field textarea {
+      resize: vertical;
+      min-height: 52px;
+    }
+
+    .owner-actions {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg,#22c55e,#16a34a);
+      color: #022c22;
+      box-shadow:
+        0 12px 30px rgba(34,197,94,0.35),
+        0 0 0 1px rgba(6,95,70,0.9);
+    }
+
+    .btn-ghost {
+      background: rgba(15,23,42,0.9);
+      color: #e5e7eb;
+      border: 1px solid rgba(148,163,184,0.8);
+    }
+
+    /* المحطات المتاحة */
+    .stations-section {
+      margin-top: 4px;
+    }
+
+    .stations-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .stations-header h2 {
+      font-size: 15px;
+    }
+
+    .stations-header small {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    .stations-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+      gap: 12px;
     }
 
     .card {
-      background: radial-gradient(circle at top, #020617, #020617 55%, #000 100%);
       border-radius: 18px;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      padding: 14px 14px 16px;
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.7);
+      padding: 14px 12px 12px;
+      border: 1px solid rgba(55,65,81,0.9);
+      background: radial-gradient(circle at top,#0b1120 0,#020617 55%,#000 100%);
+      box-shadow:
+        0 12px 40px rgba(15,23,42,0.9),
+        0 0 0 1px rgba(15,23,42,0.9);
+      position: relative;
+      overflow: hidden;
     }
 
     .card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
-      gap: 10px;
-    }
-
-    .card-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: #f9fafb;
-    }
-
-    .pill {
-      border-radius: 999px;
-      padding: 4px 9px;
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      background: rgba(34, 197, 94, 0.1);
-      color: #4ade80;
-      border: 1px solid rgba(34, 197, 94, 0.5);
-    }
-
-    .pill-red {
-      background: rgba(248, 113, 113, 0.12);
-      color: #f97373;
-      border-color: rgba(248, 113, 113, 0.55);
-    }
-
-    .field-label {
-      font-size: 11px;
-      color: #9ca3af;
       margin-bottom: 4px;
     }
 
-    .field-input,
-    select,
-    textarea {
-      width: 100%;
-      border-radius: 10px;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      background: rgba(15, 23, 42, 0.8);
+    .card-title {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .card-owner {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    .badge-status {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(22,163,74,0.15);
+      border: 1px solid rgba(34,197,94,0.7);
+      color: #bbf7d0;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .badge-status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: radial-gradient(circle,#bbf7d0 0,#22c55e 55%,#052e16 100%);
+      box-shadow: 0 0 8px #22c55e;
+    }
+
+    .card-body {
+      font-size: 11px;
       color: #e5e7eb;
-      font-size: 13px;
-      padding: 7px 9px;
+    }
+
+    .card-line {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2px;
+      gap: 6px;
+    }
+
+    .card-line span.label {
+      color: #9ca3af;
+    }
+
+    .hours-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 12px;
+    }
+
+    .hours-row select {
+      min-width: 70px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.8);
+      background: rgba(15,23,42,0.96);
+      padding: 5px 10px;
+      color: #e5e7eb;
+      font-size: 12px;
       outline: none;
     }
 
-    .field-input:focus,
-    select:focus,
-    textarea:focus {
-      border-color: #22c55e;
-      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.4);
-    }
-
-    textarea {
-      min-height: 68px;
-      resize: vertical;
-    }
-
-    .inline-fields {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 8px 14px;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      margin-top: 8px;
-      transition: transform 0.1s, box-shadow 0.1s, filter 0.1s;
-    }
-
-    .btn-primary {
-      background: linear-gradient(90deg, #22c55e, #16a34a);
-      color: #022c22;
-      box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3);
-      width: 100%;
-    }
-
-    .btn-primary:hover {
-      filter: brightness(1.03);
-      transform: translateY(-1px);
-    }
-
-    .btn-ghost {
-      background: transparent;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      color: #e5e7eb;
-      width: 100%;
-    }
-
-    .btn-ghost:hover {
-      background: rgba(15, 23, 42, 0.9);
-    }
-
-    .stations-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 12px;
-      margin-top: 10px;
-    }
-
-    .station-card {
-      background: radial-gradient(circle at top, #020617, #020617 55%, #000 100%);
-      border-radius: 16px;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      padding: 14px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .station-header {
-      display: flex;
-      justify-content: space-between;
-      gap: 6px;
-      margin-bottom: 6px;
-    }
-
-    .station-name {
-      font-size: 14px;
-      font-weight: 700;
-      color: #f9fafb;
-    }
-
-    .station-gpu {
+    .price-display {
+      margin-top: 4px;
       font-size: 12px;
       color: #a5b4fc;
     }
 
-    .station-meta {
-      font-size: 11px;
-      color: #9ca3af;
-      margin-bottom: 4px;
-    }
-
-    .price-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 3px 9px;
-      border-radius: 999px;
-      font-size: 11px;
-      background: rgba(34, 197, 94, 0.1);
-      color: #4ade80;
-      border: 1px solid rgba(34, 197, 94, 0.5);
-      margin-block: 4px;
-    }
-
-    .station-footer {
-      display: flex;
-      gap: 6px;
-      margin-top: 6px;
-      align-items: center;
-    }
-
-    .small-text {
-      font-size: 11px;
-      color: #9ca3af;
-      margin-top: 6px;
-    }
-
-    hr.separator {
-      border: none;
-      border-top: 1px dashed rgba(148, 163, 184, 0.4);
-      margin: 16px 0 10px;
-    }
-
-    /* شريط حجز نشط للعميل */
-    .active-rental-bar {
-      margin-top: 12px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid rgba(74, 222, 128, 0.5);
-      display: none;
-      font-size: 12px;
-    }
-
-    .active-rental-bar strong {
-      color: #bbf7d0;
-    }
-
-    .active-rental-bar a {
-      color: #38bdf8;
-      text-decoration: none;
-      word-break: break-all;
-    }
-
-    .countdown {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-        "Liberation Mono", "Courier New", monospace;
-      font-size: 12px;
-      color: #facc15;
-    }
-
-    /* مودال الاستئجار */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.88);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 50;
-      padding: 16px;
-    }
-
-    .modal {
-      max-width: 420px;
-      width: 100%;
-      background: radial-gradient(circle at top, #020617, #000 80%);
-      border-radius: 18px;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      padding: 16px 16px 18px;
-      box-shadow: 0 25px 50px rgba(15, 23, 42, 0.9);
-    }
-
-    .modal-header {
+    .card-footer {
+      margin-top: 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
-    .modal-title {
-      font-size: 15px;
-      font-weight: 700;
-    }
-
-    .close-btn {
-      background: transparent;
+    .btn-rent {
+      flex: 1;
+      padding: 9px 10px;
+      border-radius: 999px;
       border: none;
-      color: #9ca3af;
       cursor: pointer;
-      font-size: 18px;
-    }
-
-    .modal-body {
       font-size: 13px;
-      color: #e5e7eb;
-    }
-
-    .modal-body p {
-      margin-bottom: 4px;
-    }
-
-    .modal-body strong {
-      color: #bfdbfe;
-    }
-
-    .hours-select-wrapper {
-      margin: 8px 0;
-    }
-
-    #paypal-button-container {
-      margin-top: 10px;
+      font-weight: 700;
+      background: linear-gradient(135deg,#22c55e,#0ea5e9);
+      color: #022c22;
+      box-shadow:
+        0 16px 32px rgba(56,189,248,0.35),
+        0 0 0 1px rgba(8,47,73,0.9);
+      white-space: nowrap;
     }
 
     .hint {
-      font-size: 11px;
+      font-size: 10px;
       color: #9ca3af;
-      margin-top: 6px;
     }
 
-    footer {
-      margin-top: 26px;
+    /* مودال تأكيد الاستئجار */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .modal-backdrop.visible {
+      display: flex;
+    }
+
+    .modal {
+      width: min(420px, 100% - 32px);
+      border-radius: 18px;
+      padding: 18px 16px 16px;
+      background: radial-gradient(circle at top,#020617 0,#020617 55%,#000 100%);
+      border: 1px solid rgba(148,163,184,0.4);
+      box-shadow:
+        0 20px 50px rgba(15,23,42,1),
+        0 0 0 1px rgba(15,23,42,1);
+      position: relative;
+    }
+
+    .modal h3 {
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .modal p {
+      font-size: 12px;
+      color: #e5e7eb;
+      margin-bottom: 6px;
+    }
+
+    .modal .summary {
+      font-size: 12px;
+      color: #cbd5f5;
+      margin-bottom: 4px;
+    }
+
+    .modal .summary span {
+      color: #f97316;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      position: absolute;
+      inset-inline-end: 10px;
+      top: 10px;
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      cursor: pointer;
+      background: rgba(15,23,42,0.9);
+    }
+
+    .paypal-box {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(15,23,42,0.9);
+      border: 1px dashed rgba(148,163,184,0.7);
       font-size: 11px;
-      color: #6b7280;
-      text-align: center;
+      color: #9ca3af;
+    }
+
+    #paypal-button-container {
+      margin-top: 8px;
+    }
+
+    @media (max-width: 640px) {
+      .hero-header {
+        align-items: flex-start;
+      }
+      .title h1 {
+        font-size: 20px;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- شريط متحرك -->
-  <div class="top-banner-wrapper">
-    <div class="top-banner">
-      <span>🔥 منصّة GPU خاصة – تحصل على 20% من كل ساعة استئجار بدون أن ترفع إصبعك!</span>
-      <span>💳 الدفع يتم آليًا عبر PayPal – لا تحتاج لمحاسبة يدوية أو متابعة التحويلات.</span>
-      <span>🛡️ بيانات دخول السيرفر لا تظهر إلا بعد الدفع، مع إخفائها تلقائيًا عند انتهاء الوقت.</span>
-      <span>🚀 أضف محطاتك الآن وابدأ في تأجير كروت الشاشة خلال دقائق.</span>
+
+  <!-- الشريط المتحرك -->
+  <div class="promo-bar">
+    <div class="promo-text">
+      <span>🔥 استأجر GPU خلال ثوانٍ – الدفع آمن عبر PayPal – استمتع بأداء قوي وأسعار مرنة.</span>
+      <span>🎮 مثالي للألعاب السحابية، التصميم، والذكاء الاصطناعي – بدون تعقيد، فقط اختَر المحطة وعدد الساعات.</span>
+      <span>💡 أضف محطاتك إذا كنت صاحب مقهى أو مركز ألعاب واربح من أجهزتك بسهولة.</span>
     </div>
   </div>
 
-  <div class="container">
-    <!-- هيدر -->
+  <div class="page">
+    <!-- الهيدر -->
     <section class="hero">
-      <div class="hero-inner">
-        <h1 class="hero-title">منصة تأجير وحدات GPU</h1>
-        <p class="hero-sub">
-          أضف محطات RTX / A-Series / H-Series، اختر السعر بالساعة، والباقي المنصة تتكفل به:
-          الدفع عبر PayPal، تفعيل الدخول تلقائيًا، وعدّ تنازلي لنهاية الوقت.
-        </p>
-        <div class="hero-badges">
-          <div class="badge-primary">%20 عمولة لصاحب المنصة – %80 لصاحب المحطة</div>
-          <div class="badge">دعم RTX 3090 / 4090 / A100 / H100</div>
-          <div class="badge">تأكيد الدفع الفوري عبر PayPal</div>
-          <div class="badge">حجز محلي (LocalStorage) بدون سيرفر خارجي</div>
+      <div class="hero-header">
+        <div class="title">
+          <h1>منصة تأجير وحدات GPU</h1>
+          <p>اختر المحطة، حدّد الساعات، وادفع عبر PayPal. تجربة بسيطة وواضحة لك ولصاحب المحطة.</p>
+          <div class="pill-row">
+            <div class="pill green">
+              <div class="pill-dot"></div>
+              <span>نسبة نجاح الاستئجار &gt; 80%</span>
+            </div>
+            <div class="pill">
+              RTX / A&nbsp;Series / H&nbsp;Series
+              <small>بطاقات حديثة لأعلى أداء</small>
+            </div>
+            <div class="pill">
+              <small>يمكن لصاحب المحطة تعديل بياناته من لوحة الإدارة في الأسفل.</small>
+            </div>
+          </div>
         </div>
-        <p class="hero-note">
-          💡 <strong>ملاحظة:</strong> المنصة لا تطفئ السيرفر فعليًا، لكنها تخفي رابط الدخول بعد انتهاء الوقت
-          حتى لا يمكن للعميل الدخول من جديد بدون دفع.
-        </p>
       </div>
     </section>
 
-    <!-- شريط جلسة نشطة للعميل -->
-    <div id="activeRentalBar" class="active-rental-bar">
-      <div id="activeRentalContent"></div>
-    </div>
+    <!-- لوحة أصحاب المحطات -->
+    <section class="owner-panel-wrap">
+      <button class="toggle-owner-btn" id="toggleOwner">
+        إدارة المحطات (لصاحب المحطة فقط)
+        <span class="badge">خاص</span>
+      </button>
 
-    <!-- إدارة المحطات + إضافة محطة -->
-    <div class="grid">
-      <section class="card">
-        <div class="card-header">
-          <div class="section-title">
-            إدارة المحطات
-            <span>(لك كصاحب المنصة / المحطة)</span>
+      <div class="owner-panel" id="ownerPanel">
+        <h2>إدارة بيانات المحطة</h2>
+        <small>اكتب بيانات محطتك ثم اضغط "حفظ / تحديث المحطة". البيانات تحفظ في المتصفح (LocalStorage) ويمكنك تعديلها لاحقاً من نفس الجهاز.</small>
+
+        <div class="owner-grid" style="margin-top:10px">
+          <div class="field">
+            <label>اسم صاحب المحطة</label>
+            <input id="ownerName" placeholder="Example: Adam Miller" />
           </div>
-          <span class="pill">وضع الإدارة</span>
-        </div>
-
-        <div style="font-size: 12px; color: #9ca3af; margin-bottom: 8px;">
-          املأ البيانات التالية لإضافة محطة جديدة. كل محطة يمكن تعديلها أو حذفها لاحقًا من قائمة المحطات
-          بالأسفل. البيانات تحفظ محليًا في المتصفح (LocalStorage).
-        </div>
-
-        <div class="field-group">
-          <div class="field-label">اسم صاحب المحطة</div>
-          <input id="ownerName" class="field-input" placeholder="Example: Adam Miller" />
-        </div>
-
-        <div class="field-group" style="margin-top: 6px;">
-          <div class="field-label">نوع بطاقة الرسوميات (GPU)</div>
-          <input id="gpuModel" class="field-input" placeholder="RTX 4090 / RTX 3090 / A100 / H100" />
-        </div>
-
-        <div class="inline-fields" style="margin-top: 6px;">
-          <div>
-            <div class="field-label">الدولة / المدينة</div>
-            <input id="location" class="field-input" placeholder="Example: Salalah, Oman" />
+          <div class="field">
+            <label>اسم المحطة / الوصف المختصر</label>
+            <input id="stationName" placeholder="RTX 4090 Gaming Rig" />
           </div>
-          <div>
-            <div class="field-label">السعر لكل ساعة (بالدولار)</div>
-            <input id="pricePerHour" type="number" min="0" step="0.01" class="field-input"
-              placeholder="0.50" />
+          <div class="field">
+            <label>نوع كرت الشاشة (GPU)</label>
+            <input id="gpuModel" placeholder="RTX 3090 / RTX 4090 / A100 ..." />
           </div>
-        </div>
-
-        <div class="inline-fields" style="margin-top: 6px;">
-          <div>
-            <div class="field-label">أقصى عدد ساعات للحجز الواحد</div>
-            <input id="maxHours" type="number" min="1" max="24" class="field-input" placeholder="1" />
+          <div class="field">
+            <label>المدينة / الدولة</label>
+            <input id="location" placeholder="Example: Salalah, Oman" />
           </div>
-          <div>
-            <div class="field-label">عدد الجلسات المتاحة الآن</div>
-            <input id="slots" type="number" min="1" class="field-input" placeholder="1" />
+          <div class="field">
+            <label>السعر لكل ساعة (بالدولار)</label>
+            <input id="hourlyRate" type="number" step="0.01" min="0" placeholder="0.50" />
+          </div>
+          <div class="field">
+            <label>الحد الأقصى لعدد الساعات في الحجز الواحد</label>
+            <input id="maxHours" type="number" min="1" max="24" value="1" />
+          </div>
+          <div class="field">
+            <label>وسيلة تواصل صاحب المحطة (واتساب / بريد)</label>
+            <input id="contact" placeholder="WhatsApp / Email" />
+          </div>
+          <div class="field">
+            <label>رابط الدخول إلى السيرفر (اختياري حالياً)</label>
+            <input id="accessLink" placeholder="Example: RDP / AnyDesk / RustDesk URL" />
           </div>
         </div>
 
-        <div class="field-group" style="margin-top: 6px;">
-          <div class="field-label">رابط الدخول إلى السيرفر</div>
-          <input id="loginUrl" class="field-input"
-            placeholder="Example: RDP / AnyDesk / RustDesk URL" />
+        <div class="field" style="margin-top:8px">
+          <label>ملاحظات تظهر للعميل (اختياري)</label>
+          <textarea id="notes" placeholder="...Example: Fast internet, usually online most of the day"></textarea>
         </div>
 
-        <div class="field-group" style="margin-top: 6px;">
-          <div class="field-label">ملاحظات عن المحطة (اختياري)</div>
-          <textarea id="notes"
-            placeholder="Example: Fast internet, usually online most of the day..."></textarea>
+        <div class="owner-actions">
+          <button class="btn btn-primary" id="saveStation">حفظ / تحديث المحطة</button>
+          <button class="btn btn-ghost" id="clearStation">مسح بيانات المحطة من هذا الجهاز</button>
         </div>
-
-        <button class="btn btn-primary" id="saveStationBtn">حفظ / تحديث المحطة</button>
-        <button class="btn btn-ghost" id="clearFormBtn">تفريغ الحقول</button>
-
-        <div class="small-text">
-          🔐 الأمان: رابط الدخول يظهر فقط للعميل بعد الدفع، ويختفي تلقائيًا من منصة العميل بعد انتهاء الوقت.
-        </div>
-      </section>
-
-      <!-- نبذة تعليمية سريعة / تذكير بالبي بال -->
-      <section class="card">
-        <div class="card-header">
-          <div class="section-title">
-            تذكير إعداد PayPal
-          </div>
-          <span class="pill">Live</span>
-        </div>
-
-        <div style="font-size: 12px; color: #e5e7eb; line-height: 1.6;">
-          1️⃣ افتح
-          <strong>PayPal Developer &gt; Live &gt; API Credentials</strong>
-          وخذ <strong>Client ID</strong> من تطبيق
-          <strong>"الدفع التلقائي لوحدة معالجة الرسومات"</strong> ثم ضعه في
-          أعلى هذا الملف مكان:
-          <code style="font-size: 11px; color: #fbbf24;">YOUR_LIVE_PAYPAL_CLIENT_ID_HERE</code>.
-          <br /><br />
-          2️⃣ كل عملية استئجار تمر عبر نفس حساب PayPal هذا؛ المنصة لا تحتاج أي Back-End إضافي.
-          <br /><br />
-          3️⃣ بعد الدفع، تظهر بيانات الدخول للعميل مع عد تنازلي، ثم تختفي بيانات الدخول بعد انتهاء الوقت
-          المحدد.
-        </div>
-
-        <hr class="separator" />
-
-        <div style="font-size: 12px; color: #9ca3af;">
-          💬 يمكنك أيضًا إرسال ملاحظات أو أعطال في المنصة لصاحب المنصة (أنت) من خلال واتساب أو أي وسيلة
-          أخرى – هذه النسخة تعمل كاملة على المتصفح فقط.
-        </div>
-      </section>
-    </div>
-
-    <!-- قائمة المحطات المتاحة -->
-    <section style="margin-top: 14px;">
-      <div class="section-title">
-        المحطات المتاحة للاستئجار
-        <span id="stationsCountLabel"></span>
-      </div>
-      <div id="stationsList" class="stations-grid"></div>
-      <div class="small-text">
-        📌 ملاحظة: في حال نفاذ الجلسات لمحطة معينة، يظهر الزر على أنه "غير متاح مؤقتًا".
       </div>
     </section>
 
-    <footer>
-      منصة تأجير GPU – كل شيء يتم تلقائيًا بعد الدفع، بدون تدخل يدوي أو وجع رأس 😄
-    </footer>
+    <!-- المحطات المتاحة -->
+    <section class="stations-section">
+      <div class="stations-header">
+        <div>
+          <h2>المحطات المتاحة للاستئجار</h2>
+          <small>اختر المحطة وعدد الساعات، ثم اضغط زر الاستئجار. الدفع يتم عبر PayPal.</small>
+        </div>
+      </div>
+
+      <div class="stations-grid" id="stationsGrid">
+        <!-- سيتم ملؤها عبر JavaScript -->
+      </div>
+    </section>
   </div>
 
   <!-- مودال الاستئجار -->
-  <div id="rentModalBackdrop" class="modal-backdrop">
+  <div class="modal-backdrop" id="rentModal">
     <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">تأكيد الاستئجار عبر PayPal</div>
-        <button class="close-btn" id="closeModalBtn">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p>
-          المحطة: <strong id="modalStationName"></strong><br />
-          نوع البطاقة: <strong id="modalGpuModel"></strong><br />
-          الموقع: <span id="modalLocation"></span>
-        </p>
+      <div class="modal-close" id="modalClose">✕</div>
+      <h3>تأكيد الاستئجار عبر PayPal</h3>
+      <p id="modalStationTitle"></p>
+      <p class="summary" id="modalSummary"></p>
+      <p class="hint">
+        بعد إتمام الدفع بنجاح، يتواصل معك صاحب المحطة عبر وسيلة التواصل التي أدخلها، ويرسل لك بيانات الدخول للسيرفر.
+      </p>
 
-        <div class="hours-select-wrapper">
-          <div class="field-label">اختر عدد الساعات</div>
-          <select id="hoursSelect" class="field-input"></select>
-        </div>
-
-        <p>
-          السعر الكلي: <strong id="modalTotalPrice"></strong> USD
-          (<span id="modalPricePerHour"></span> USD / ساعة)
-        </p>
-
+      <div class="paypal-box">
+        <div>زر الدفع من PayPal سيظهر هنا بعد اختيارك للمحطة:</div>
         <div id="paypal-button-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ====== بيانات افتراضية لمحطتين (تظهر دائماً كمثال) ======
+    const defaultStations = [
+      {
+        id: "demo-rtx3090",
+        stationName: "RTX 3090 Gaming",
+        ownerName: "John Miller",
+        contact: "WhatsApp / Email",
+        location: "Dubai, UAE",
+        gpuModel: "RTX 3090",
+        hourlyRate: 0.40,
+        maxHours: 3,
+        accessLink: "",
+        notes: "اتصال سريع، مناسب للألعاب والتصميم."
+      },
+      {
+        id: "demo-rtx4090",
+        stationName: "RTX 4090 Studio",
+        ownerName: "Adam Smith",
+        contact: "WhatsApp / Email",
+        location: "Salalah, Oman",
+        gpuModel: "RTX 4090",
+        hourlyRate: 0.50,
+        maxHours: 5,
+        accessLink: "",
+        notes: "ممتاز لمشاريع الذكاء الاصطناعي والرندر."
+      }
+    ];
+
+    const OWNER_KEY = "gpu_platform_owner_station_v1";
+
+    const stationsGrid = document.getElementById("stationsGrid");
+    const ownerPanel = document.getElementById("ownerPanel");
+    const toggleOwner = document.getElementById("toggleOwner");
+
+    const ownerNameInput   = document.getElementById("ownerName");
+    const stationNameInput = document.getElementById("stationName");
+    const gpuModelInput    = document.getElementById("gpuModel");
+    const locationInput    = document.getElementById("location");
+    const hourlyRateInput  = document.getElementById("hourlyRate");
+    const maxHoursInput    = document.getElementById("maxHours");
+    const contactInput     = document.getElementById("contact");
+    const accessLinkInput  = document.getElementById("accessLink");
+    const notesInput       = document.getElementById("notes");
+
+    const saveStationBtn   = document.getElementById("saveStation");
+    const clearStationBtn  = document.getElementById("clearStation");
+
+    const rentModal        = document.getElementById("rentModal");
+    const modalClose       = document.getElementById("modalClose");
+    const modalStationTitle= document.getElementById("modalStationTitle");
+    const modalSummary     = document.getElementById("modalSummary");
+
+    let currentRentInfo = null;
+    let paypalRenderedFor = null;
+
+    // إظهار / إخفاء لوحة صاحب المحطة
+    toggleOwner.addEventListener("click", () => {
+      ownerPanel.classList.toggle("visible");
+    });
+
+    // تحميل بيانات صاحب المحطة من LocalStorage
+    function loadOwnerStation() {
+      try {
+        const raw = localStorage.getItem(OWNER_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch (e) {
+        console.error("Error reading owner station from storage", e);
+        return null;
+      }
+    }
+
+    function saveOwnerStation(station) {
+      localStorage.setItem(OWNER_KEY, JSON.stringify(station));
+    }
+
+    function clearOwnerStation() {
+      localStorage.removeItem(OWNER_KEY);
+    }
+
+    // تعبئة نموذج صاحب المحطة إذا فيه بيانات محفوظة
+    function populateOwnerForm(station) {
+      if (!station) return;
+      ownerNameInput.value   = station.ownerName || "";
+      stationNameInput.value = station.stationName || "";
+      gpuModelInput.value    = station.gpuModel || "";
+      locationInput.value    = station.location || "";
+      hourlyRateInput.value  = station.hourlyRate ?? "";
+      maxHoursInput.value    = station.maxHours ?? 1;
+      contactInput.value     = station.contact || "";
+      accessLinkInput.value  = station.accessLink || "";
+      notesInput.value       = station.notes || "";
+    }
+
+    // حفظ / تحديث بيانات المحطة لصاحب المنصة نفسه
+    saveStationBtn.addEventListener("click", () => {
+      const station = {
+        id: "owner-station",
+        ownerName: ownerNameInput.value.trim() || "Owner Name",
+        stationName: stationNameInput.value.trim() || "My GPU Station",
+        gpuModel: gpuModelInput.value.trim() || "RTX 3090 / 4090",
+        location: locationInput.value.trim() || "Your City, Country",
+        hourlyRate: parseFloat(hourlyRateInput.value) || 0.50,
+        maxHours: parseInt(maxHoursInput.value || "1", 10),
+        contact: contactInput.value.trim() || "WhatsApp / Email",
+        accessLink: accessLinkInput.value.trim() || "",
+        notes: notesInput.value.trim() || ""
+      };
+      if (station.maxHours < 1) station.maxHours = 1;
+      if (station.maxHours > 24) station.maxHours = 24;
+      saveOwnerStation(station);
+      renderStations();
+      alert("تم حفظ / تحديث بيانات المحطة في هذا المتصفح.");
+    });
+
+    clearStationBtn.addEventListener("click", () => {
+      if (!confirm("هل تريد مسح بيانات محطتك من هذا المتصفح؟")) return;
+      clearOwnerStation();
+      ownerNameInput.value = "";
+      stationNameInput.value = "";
+      gpuModelInput.value = "";
+      locationInput.value = "";
+      hourlyRateInput.value = "";
+      maxHoursInput.value = 1;
+      contactInput.value = "";
+      accessLinkInput.value = "";
+      notesInput.value = "";
+      renderStations();
+    });
+
+    // إنشاء كارد لمحطة واحدة
+    function createStationCard(station) {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const header = document.createElement("div");
+      header.className = "card-header";
+
+      const left = document.createElement("div");
+      const title = document.createElement("div");
+      title.className = "card-title";
+      title.textContent = station.gpuModel || station.stationName;
+      const owner = document.createElement("div");
+      owner.className = "card-owner";
+      owner.textContent = station.ownerName + " • " + station.location;
+      left.appendChild(title);
+      left.appendChild(owner);
+
+      const badge = document.createElement("div");
+      badge.className = "badge-status";
+      const dot = document.createElement("div");
+      dot.className = "badge-status-dot";
+      const txt = document.createElement("span");
+      txt.textContent = "متاح للاستئجار";
+      badge.appendChild(dot);
+      badge.appendChild(txt);
+
+      header.appendChild(left);
+      header.appendChild(badge);
+
+      const body = document.createElement("div");
+      body.className = "card-body";
+
+      const line1 = document.createElement("div");
+      line1.className = "card-line";
+      line1.innerHTML =
+        `<span class="label">السعر لكل ساعة:</span><span>$${station.hourlyRate.toFixed(2)} / ساعة</span>`;
+
+      const line2 = document.createElement("div");
+      line2.className = "card-line";
+      line2.innerHTML =
+        `<span class="label">الحد الأقصى للحجز:</span><span>${station.maxHours} ساعة</span>`;
+
+      if (station.notes) {
+        const line3 = document.createElement("div");
+        line3.className = "card-line";
+        line3.innerHTML =
+          `<span class="label">ملاحظات:</span><span>${station.notes}</span>`;
+        body.appendChild(line3);
+      }
+
+      body.appendChild(line1);
+      body.appendChild(line2);
+
+      const hoursRow = document.createElement("div");
+      hoursRow.className = "hours-row";
+
+      const hoursLabel = document.createElement("span");
+      hoursLabel.textContent = "عدد الساعات:";
+
+      const hoursSelect = document.createElement("select");
+      for (let i = 1; i <= station.maxHours; i++) {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = i;
+        hoursSelect.appendChild(opt);
+      }
+
+      hoursRow.appendChild(hoursLabel);
+      hoursRow.appendChild(hoursSelect);
+
+      const priceDisplay = document.createElement("div");
+      priceDisplay.className = "price-display";
+      const updatePrice = () => {
+        const hours = parseInt(hoursSelect.value, 10);
+        const total = hours * station.hourlyRate;
+        priceDisplay.textContent = `المجموع: $${total.toFixed(2)} لـ ${hours} ساعة`;
+      };
+      hoursSelect.addEventListener("change", updatePrice);
+      updatePrice();
+
+      const footer = document.createElement("div");
+      footer.className = "card-footer";
+
+      const rentBtn = document.createElement("button");
+      rentBtn.className = "btn-rent";
+      rentBtn.textContent = "استئجار الآن عبر PayPal";
+
+      rentBtn.addEventListener("click", () => {
+        const hours = parseInt(hoursSelect.value, 10);
+        openRentModal(station, hours);
+      });
+
+      const hint = document.createElement("div");
+      hint.className = "hint";
+      hint.textContent = "الدفع يتم عبر PayPal. بعد الدفع، يتم التواصل معك من صاحب المحطة.";
+
+      footer.appendChild(rentBtn);
+      footer.appendChild(hint);
+
+      card.appendChild(header);
+      card.appendChild(body);
+      card.appendChild(hoursRow);
+      card.appendChild(priceDisplay);
+      card.appendChild(footer);
+
+      return card;
+    }
+
+    // عرض المحطات في الصفحة
+    function renderStations() {
+      stationsGrid.innerHTML = "";
+      const ownerStation = loadOwnerStation();
+      const all = [...defaultStations];
+      if (ownerStation) all.unshift(ownerStation);
+      all.forEach(st => stationsGrid.appendChild(createStationCard(st)));
+    }
+
+    // فتح مودال التأكيد + تهيئة PayPal
+    function openRentModal(station, hours) {
+      const total = (station.hourlyRate * hours).toFixed(2);
+      currentRentInfo = { station, hours, total };
+
+      modalStationTitle.textContent =
+        `المحطة: ${station.stationName || station.gpuModel} – المالك: ${station.ownerName}`;
+      modalSummary.innerHTML =
+        `ستقوم باستئجار المحطة لمدة <span>${hours} ساعة</span> بمبلغ إجمالي <span>$${total}</span>.`;
+
+      rentModal.classList.add("visible");
+
+      if (paypalRenderedFor === station.id + "-" + hours) {
+        return;
+      }
+      paypalRenderedFor = station.id + "-" + hours;
+
+      const container = document.getElementById("paypal-button-container");
+      container.innerHTML = "";
+
+      if (typeof paypal !== "undefined") {
+        paypal.Buttons({
+          style: {
+            layout: "horizontal",
+            color:  "gold",
+            shape:  "pill",
+            label:  "paypal"
+          },
+          createOrder: function(data, actions) {
+            return actions.order.create({
+              purchase_units: [{
+                description: `GPU Rental - ${station.stationName || station.gpuModel} (${hours}h)`,
+                amount: { value: total }
+              }]
+            });
+          },
+          onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+              alert("تم الدفع بنجاح عبر PayPal. تواصل مع صاحب المحطة لاستلام بيانات الدخول.");
+              closeModal();
+            });
+          },
+          onError: function(err) {
+            console.error(err);
+            alert("حدث خطأ أثناء محاولة الدفع عبر PayPal. حاول مرة أخرى.");
+          }
+        }).render("#paypal-button-container");
+      } else {
+        container.innerHTML =
+          "<div style='color:#fecaca;font-size:12px;margin-top:6px'>تعذر تحميل مكتبة PayPal. تأكد من اتصال الإنترنت.</div>";
+      }
+    }
+
+    function closeModal() {
+      rentModal.classList.remove("visible");
+    }
+
+    modalClose.addEventListener("click", closeModal);
+    rentModal.addEventListener("click", (e) => {
+      if (e.target === rentModal) closeModal();
+    });
+
+    // بداية التشغيل
+    (function init() {
+      const ownerStation = loadOwnerStation();
+      if (ownerStation) populateOwnerForm(ownerStation);
+      renderStations();
+    })();
+  </script>
+</body>
+</html>
