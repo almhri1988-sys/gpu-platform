@@ -2,1165 +2,471 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GPU Rental Platform</title>
-
-  <!-- PayPal SDK -->
-  <!-- غيّر YOUR_PAYPAL_CLIENT_ID إلى Client ID من لوحة PayPal -->
+  <title>منصة تأجير GPU</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- ✅ حط هنا الـ CLIENT ID الحقيقي من حساب PayPal BUSINESS -->
   <script src="https://www.paypal.com/sdk/js?client-id=YOUR_PAYPAL_CLIENT_ID&currency=USD"></script>
-
   <style>
-    body {
-      margin: 0;
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
-      color: #f9fafb;
-    }
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 16px 16px 40px;
-    }
-
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-      font-weight: 600;
-    }
-    .brand-badge {
-      width: 26px;
-      height: 26px;
-      border-radius: 8px;
-      background: conic-gradient(from 120deg,#22c55e,#0ea5e9,#a855f7,#22c55e);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size: 12px;
-      color:#0b1220;
-      font-weight: 800;
-    }
-
-    .lang-switch {
-      display: flex;
-      gap: 6px;
-      font-size: 12px;
-    }
-    .lang-btn {
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid #374151;
-      background: #020617;
-      color: #f9fafb;
-      cursor: pointer;
-    }
-    .lang-btn.active {
-      background: #22c55e;
-      color: #041007;
-      border-color: #22c55e;
-      font-weight: 600;
-    }
-
-    .hero {
-      border-radius: 18px;
-      padding: 20px 18px 18px;
-      margin-bottom: 16px;
-      border: 1px solid #1f2937;
-      background: radial-gradient(circle at top left,#1f2937 0,#020617 40%,#020617 100%);
-      position: relative;
-      overflow: hidden;
-    }
-    .hero::before {
-      content:"";
-      position:absolute;
-      inset:-1px;
-      border-radius:inherit;
-      border:1px solid #22c55e11;
-      pointer-events:none;
-    }
-    .hero-main {
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-    @media (min-width:768px) {
-      .hero-main {
-        flex-direction:row;
-        justify-content:space-between;
-        align-items:center;
-      }
-    }
-    .hero-text {
-      max-width: 520px;
-    }
-    .hero-title {
-      font-size: 22px;
-      font-weight: 700;
-      margin: 0 0 6px;
-    }
-    .hero-sub {
-      font-size: 13px;
-      color:#9ca3af;
-      margin:0 0 10px;
-    }
-    .hero-pills {
-      display:flex;
-      flex-wrap:wrap;
-      gap:6px;
-      margin-bottom: 4px;
-    }
-    .pill-main {
-      padding:4px 10px;
-      border-radius:999px;
-      border:1px solid #22c55e55;
-      background:#022c2255;
-      font-size:11px;
-      display:flex;
-      align-items:center;
-      gap:4px;
-    }
-    .pill-main-dot {
-      width:8px;
-      height:8px;
-      border-radius:999px;
-      background:#22c55e;
-      box-shadow:0 0 8px #22c55e;
-    }
-    .pill-sec {
-      padding:3px 9px;
-      border-radius:999px;
-      border:1px solid #1f2937;
       background:#020617;
-      font-size:11px;
-      color:#e5e7eb;
+      color:#fff;
+      min-height:100vh;
     }
-    .hero-metrics {
-      display:flex;
-      gap:14px;
-      margin-top:8px;
-      font-size:11px;
-      color:#9ca3af;
+    .page{
+      max-width:1100px;
+      margin:0 auto;
+      padding:16px;
     }
-    .hero-metric strong {
-      display:block;
-      font-size:16px;
-      color:#e5e7eb;
-    }
-
-    .hero-badge {
-      font-size:11px;
-      color:#a5b4fc;
-      display:flex;
-      align-items:center;
-      gap:4px;
-      margin-bottom:4px;
-    }
-    .hero-badge-dot {
-      width:6px;
-      height:6px;
+    .banner{
+      background:linear-gradient(90deg,#22c55e,#38bdf8,#a855f7,#22c55e);
+      padding:8px 16px;
       border-radius:999px;
-      background:#22c55e;
-      box-shadow:0 0 6px #22c55e;
-    }
-
-    .ticker {
-      margin-top: 12px;
-      border-radius: 999px;
-      border:1px solid #1f2937;
-      background: radial-gradient(circle at left,#16a34a22 0,#020617 45%);
+      margin-bottom:16px;
       overflow:hidden;
-      padding:4px 0;
+      white-space:nowrap;
+      position:relative;
     }
-    .ticker-inner {
+    .banner-text{
       display:inline-block;
-      padding-inline: 18px;
-      white-space: nowrap;
-      animation: ticker 20s linear infinite;
-      font-size: 11px;
-      color:#d1fae5;
+      animation:scroll 18s linear infinite;
+      font-size:14px;
+      font-weight:600;
     }
-    .ticker-inner span {
-      margin-inline: 22px;
-      opacity:0.9;
+    @keyframes scroll{
+      from{transform:translateX(100%)}
+      to{transform:translateX(-100%)}
     }
-    @keyframes ticker {
-      0%   { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
+    h1{font-size:26px;margin-bottom:6px}
+    .subtitle{color:#9ca3af;margin-bottom:16px;font-size:14px}
 
-    h2 {
-      text-align: center;
-      margin: 10px 0;
-      font-size: 18px;
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:14px;
+      margin-top:6px;
     }
-
-    section {
-      background: #020617;
-      border-radius: 14px;
-      border: 1px solid #1f2933;
-      padding: 16px 14px;
-      margin-top: 18px;
-      box-shadow: 0 16px 40px rgba(0,0,0,0.45);
-    }
-
-    label {
-      display: block;
-      font-size: 13px;
-      margin-bottom: 4px;
-    }
-    input, select, textarea {
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 8px;
-      border: 1px solid #374151;
-      background: #020617;
-      color: #f9fafb;
-      font-size: 13px;
-      margin-bottom: 10px;
-      box-sizing: border-box;
-    }
-    textarea {
-      min-height: 70px;
-      resize: vertical;
-    }
-    input::placeholder, textarea::placeholder {
-      color: #6b7280;
-    }
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: #22c55e;
-      box-shadow: 0 0 0 1px #22c55e33;
-    }
-
-    button {
-      width: 100%;
-      padding: 10px 14px;
-      border-radius: 999px;
-      border: none;
-      background: linear-gradient(90deg,#22c55e,#16a34a);
-      color: #041007;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-      margin-top: 4px;
-      transition: transform 0.08s ease, box-shadow 0.08s ease, opacity 0.08s ease;
-      box-shadow: 0 10px 25px rgba(34,197,94,0.22);
-    }
-    button:hover {
-      opacity: 0.96;
-      transform: translateY(-1px);
-      box-shadow: 0 18px 40px rgba(34,197,94,0.28);
-    }
-    button:active {
-      transform: translateY(0);
-      box-shadow: 0 8px 16px rgba(34,197,94,0.4);
-    }
-
-    .stations-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .station-card {
-      border-radius: 12px;
-      border: 1px solid #1f2933;
-      background: radial-gradient(circle at top,#020817,#020617 55%,#000 100%);
-      padding: 12px;
-      font-size: 13px;
+    .card{
+      background:radial-gradient(circle at top,#0f172a,#020617 65%);
+      border-radius:20px;
+      padding:14px;
+      border:1px solid #1e293b;
+      box-shadow:0 12px 36px rgba(15,23,42,0.8);
       position:relative;
       overflow:hidden;
     }
-    .station-card::before {
-      content:"";
-      position:absolute;
-      inset:-1px;
-      border-radius:inherit;
-      border:1px solid transparent;
-      background:linear-gradient(120deg,#22c55e33,#0ea5e933,#0000) border-box;
-      mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
-      -webkit-mask-composite:xor;
-      mask-composite:exclude;
-      opacity:0.55;
+    .card-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:6px;
     }
-    .station-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 8px;
-    }
-    .station-name {
-      font-weight: 600;
-      font-size: 14px;
-      margin-bottom: 4px;
-    }
-    .price-badge {
-      background: radial-gradient(circle at top,#22c55e,#16a34a);
-      color: #041007;
-      padding: 3px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-      white-space: nowrap;
-      box-shadow:0 0 0 1px #16a34a66,0 8px 22px rgba(34,197,94,0.35);
-    }
-    .muted {
-      color: #9ca3af;
-      font-size: 12px;
-    }
-    .row {
-      margin-top: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .small-input {
-      width: 90px;
-    }
-    .paybox {
-      width: 100%;
-      margin-top: 4px;
-    }
-    .perf-badge {
-      display:inline-block;
-      padding:2px 8px;
+    .badge{
+      background:#16a34a;
       border-radius:999px;
+      padding:2px 8px;
       font-size:11px;
+    }
+    .label{font-size:12px;color:#9ca3af;margin-bottom:3px}
+    .value{font-size:13px;margin-bottom:4px}
+    .input{
+      width:100%;
+      padding:6px 8px;
+      border-radius:10px;
+      border:1px solid #1f2937;
+      background:#020617;
+      color:#fff;
+      font-size:13px;
+      margin-bottom:6px;
+    }
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-size:12px;
+      margin-bottom:6px;
+      color:#9ca3af;
+    }
+    .row strong{color:#fff}
+    .btn{
+      width:100%;
+      padding:7px;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      background:linear-gradient(90deg,#22c55e,#16a34a);
+      color:#fff;
+      font-weight:600;
+      font-size:13px;
+    }
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .hint{
       margin-top:4px;
+      font-size:10px;
+      color:#6b7280;
     }
-    .perf-strong { background:#16a34a33; color:#4ade80; }
-    .perf-medium { background:#ca8a0433; color:#facc15; }
-    .perf-weak { background:#b91c1c33; color:#f87171; }
+    .error{
+      background:#b91c1c;
+      padding:8px 10px;
+      border-radius:12px;
+      margin-bottom:10px;
+      font-size:12px;
+    }
 
-    .footer-text {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 11px;
-      color: #6b7280;
+    /* لوحة بعد الدفع */
+    .success-box{
+      margin-top:8px;
+      background:#022c22;
+      border-radius:12px;
+      padding:8px 10px;
+      border:1px dashed #16a34a;
+      font-size:11px;
     }
-    .admin-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      font-size: 12px;
+    .success-box a{
+      color:#4ade80;
+      word-break:break-all;
     }
-    .admin-table th, .admin-table td {
-      border: 1px solid #374151;
-      padding: 6px 4px;
-      text-align: center;
+    .timer-box{
+      background:#0f172a;
+      border-radius:12px;
+      padding:8px 10px;
+      margin-top:6px;
+      font-size:11px;
     }
-    .admin-table th {
-      background: #020617;
+    .timer{
+      font-size:18px;
+      letter-spacing:.08em;
+      font-weight:700;
     }
-    .pill {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-    }
-    .pill-owner { background:#1d4ed8; }
-    .pill-platform { background:#16a34a; }
 
+    /* نافذة PayPal */
+    .modal{
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.7);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:50;
+      visibility:hidden;
+      opacity:0;
+      transition:.2s;
+    }
+    .modal.show{visibility:visible;opacity:1}
+    .modal-content{
+      background:#020617;
+      border-radius:16px;
+      padding:16px;
+      width:95%;
+      max-width:420px;
+      border:1px solid #1f2937;
+      box-shadow:0 20px 50px rgba(0,0,0,.8);
+    }
+    .modal-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:10px;
+    }
+    .close-btn{
+      background:none;
+      border:none;
+      color:#9ca3af;
+      font-size:18px;
+      cursor:pointer;
+    }
   </style>
 </head>
-
 <body>
-  <div class="container">
-    <div class="top-bar">
-      <div class="brand">
-        <div class="brand-badge">G</div>
-        <span>GPU Cloud Hub</span>
-      </div>
-      <div class="lang-switch">
-        <button id="btn-ar" class="lang-btn active">العربية</button>
-        <button id="btn-en" class="lang-btn">English</button>
+  <div class="page">
+    <div class="banner">
+      <div class="banner-text">
+        🚀 استأجر أقوى GPU خلال ثوانٍ – الدفع آمن عبر PayPal – بدون اشتراك شهري، بدون عقود، فقط ادفع بالساعة واستمتع 👑
       </div>
     </div>
 
-    <!-- HERO -->
-    <div class="hero">
-      <div class="hero-main">
-        <div class="hero-text">
-          <div class="hero-badge">
-            <span class="hero-badge-dot"></span>
-            <span data-i18n="hero_badge">
-              منصة واحدة تجمع ملاك الـ GPU مع آلاف المطورين حول العالم.
-            </span>
+    <h1>منصة تأجير كروت الشاشة GPU</h1>
+    <p class="subtitle">
+      اختر المحطة، حدد عدد الساعات، ادفع عبر PayPal، مباشرة تحصل على بيانات الدخول للسيرفر مع عدّاد للوقت.
+    </p>
+
+    <div id="global-error" class="error" style="display:none"></div>
+
+    <div class="grid" id="stations-container"></div>
+  </div>
+
+  <!-- نافذة دفع PayPal -->
+  <div class="modal" id="paypal-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:2px">
+            تأكيد الاستئجار عبر PayPal
           </div>
-          <h1 class="hero-title" data-i18n="title">
-            منصة تأجير وحدات GPU
-          </h1>
-          <p class="hero-sub" data-i18n="hero_sub">
-            سجّل محطتك، حدّد سعر الساعة، واترك المنصة تتولى عمليات الحجز والدفع.
-            المطور يختار المحطة ويدفع أونلاين ويصله رابط الدخول فوراً.
-          </p>
-          <div class="hero-pills">
-            <div class="pill-main">
-              <span class="pill-main-dot"></span>
-              <span data-i18n="hero_pill_instant">استئجار سريع ودفع فوري عبر PayPal</span>
-            </div>
-            <div class="pill-sec" data-i18n="hero_pill_platform_cut">
-              المنصة تأخذ 20% – والباقي لصاحب المحطة
-            </div>
-            <div class="pill-sec" data-i18n="hero_pill_multi">
-              مناسب للذكاء الاصطناعي، التدريب، والرندر
-            </div>
-          </div>
-          <div class="hero-metrics">
-            <div class="hero-metric">
-              <strong>+200</strong>
-              <span data-i18n="hero_metric_stations">محطة يمكن إضافتها بسهولة</span>
-            </div>
-            <div class="hero-metric">
-              <strong>24/7</strong>
-              <span data-i18n="hero_metric_online">حجوزات من أي مكان في العالم</span>
-            </div>
-          </div>
+          <div id="modal-desc" style="font-size:12px;color:#9ca3af"></div>
         </div>
+        <button class="close-btn" onclick="closeModal()">✕</button>
       </div>
-
-      <div class="ticker">
-        <div class="ticker-inner">
-          <span data-i18n="ticker_1">ملاك الـ GPU يربحون أثناء نومهم – المنصة تدير الحجوزات.</span>
-          <span data-i18n="ticker_2">المطورون يحصلون على قوة معالجة عند الطلب بدون شراء أجهزة غالية.</span>
-          <span data-i18n="ticker_3">سجّل محطتك الآن، وحدد سعرك، وابدأ بتحويل استثمارك في الـ GPU إلى دخل شهري.</span>
-          <span data-i18n="ticker_1">ملاك الـ GPU يربحون أثناء نومهم – المنصة تدير الحجوزات.</span>
-          <span data-i18n="ticker_2">المطورون يحصلون على قوة معالجة عند الطلب بدون شراء أجهزة غالية.</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- تسجيل محطة جديدة -->
-    <section>
-      <h2 data-i18n="section_register">تسجيل محطة جديدة</h2>
-      <form id="stationForm">
-        <label data-i18n="owner_name_label">اسم صاحب المحطة</label>
-        <input id="ownerName" placeholder="Example: Adam Smith" required />
-
-        <label data-i18n="contact_label">وسيلة تواصل المالك (لن تظهر للزوار)</label>
-        <input id="contactMethod" placeholder="Example: WhatsApp or email" required />
-
-        <label data-i18n="gpu_type_label">نوع بطاقة الرسومات (GPU)</label>
-        <select id="gpuType" required>
-          <option value="RTX 4090">RTX 4090</option>
-          <option value="RTX 4080">RTX 4080</option>
-          <option value="RTX 3090">RTX 3090</option>
-          <option value="A100">A100</option>
-          <option value="H100">H100</option>
-          <option value="Other">Other</option>
-        </select>
-
-        <label data-i18n="performance_label">قوة المحطة / الأداء الفعلي</label>
-        <select id="performance" required>
-          <option value="Strong" data-i18n-option="perf_strong">قوية (مشاريع ثقيلة / تدريب نماذج كبيرة)</option>
-          <option value="Medium" data-i18n-option="perf_medium">متوسطة (مشاريع متوسطة / تجارب)</option>
-          <option value="Weak" data-i18n-option="perf_weak">خفيفة (تصفح / تجارب بسيطة)</option>
-        </select>
-
-        <label data-i18n="price_label">السعر لكل ساعة (بالدولار)</label>
-        <input type="number" id="pricePerHour" step="0.01" min="0" placeholder="Example: 0.50" required />
-
-        <label data-i18n="country_label">الدولة</label>
-        <input id="country" placeholder="Example: Oman" required />
-
-        <label data-i18n="city_label">المدينة</label>
-        <input id="city" placeholder="Example: Salalah" required />
-
-        <label data-i18n="owner_payout_label">بيانات استلام أرباح المالك (لن تظهر للزوار)</label>
-        <textarea id="ownerPayoutInfo" placeholder="Example: IBAN / bank account / PayPal link"></textarea>
-
-        <label data-i18n="access_url_label">رابط الدخول إلى السيرفر (لن يظهر للزوار)</label>
-        <input id="accessUrl" placeholder="Example: RDP / AnyDesk / RustDesk URL" />
-
-        <label data-i18n="notes_label">ملاحظات عن المحطة (اختياري)</label>
-        <textarea id="notes" placeholder="Example: Fast internet, usually online most of the day..."></textarea>
-
-        <button type="submit" data-i18n="save_station_btn">حفظ المحطة</button>
-      </form>
-    </section>
-
-    <!-- المحطات المتاحة -->
-    <section>
-      <h2 data-i18n="section_stations">المحطات المتاحة للاستئجار</h2>
-      <div id="stationsList" class="stations-list">
-        <p class="muted" data-i18n="loading_stations">جاري تحميل المحطات...</p>
-      </div>
-    </section>
-
-    <!-- رسالة للإدارة -->
-    <section>
-      <h2 data-i18n="section_admin_msg">رسالة للإدارة</h2>
-      <form id="adminForm">
-        <label data-i18n="admin_name_label">اسمك</label>
-        <input id="adminName" placeholder="اكتب اسمك هنا" required />
-
-        <label data-i18n="admin_contact_label">وسيلة التواصل</label>
-        <input id="adminContact" placeholder="مثال: بريد إلكتروني أو رقم واتساب" required />
-
-        <label data-i18n="admin_type_label">نوع الرسالة</label>
-        <select id="adminType">
-          <option value="استفسار" data-i18n-option="admin_type_question">استفسار</option>
-          <option value="مشكلة"  data-i18n-option="admin_type_issue">بلاغ عن مشكلة</option>
-          <option value="اقتراح" data-i18n-option="admin_type_suggestion">اقتراح تطوير</option>
-        </select>
-
-        <label data-i18n="admin_message_label">محتوى الرسالة</label>
-        <textarea id="adminMessage" placeholder="اكتب رسالتك أو استفسارك بالتفصيل" required></textarea>
-
-        <button type="submit" data-i18n="send_admin_btn">إرسال الرسالة</button>
-      </form>
-    </section>
-
-    <!-- لوحة الإدارة -->
-    <section>
-      <h2 data-i18n="section_dashboard">لوحة الإدارة (ملخص الأرباح)</h2>
-      <p class="muted" data-i18n="dashboard_desc">
-        هذا القسم يظهر لك إجمالي الساعات والمبالغ لكل محطة، ونصيب المنصة ونصيب صاحب المحطة،
-        حسب الطلبات المسجلة في النظام.
+      <div id="paypal-button-container"></div>
+      <p style="font-size:10px;color:#6b7280;margin-top:6px">
+        سيتم تحويلك إلى صفحة PayPal للدفع، ثم تعود تلقائيًا إلى المنصة وسيظهر لك رابط السيرفر وعدّاد الوقت.
       </p>
-      <button type="button" id="refreshDashboardBtn" data-i18n="refresh_dashboard_btn">تحديث الإحصائيات</button>
-      <div id="adminDashboard"></div>
-    </section>
-
-    <div class="footer-text" data-i18n="footer_text">
-      منصة تأجير وحدات GPU – الدفع يتم عبر PayPal لحساب المنصة، ويتم حساب نصيب المنصة وصاحب المحطة لكل عملية استئجار.
     </div>
   </div>
 
-  <!-- Firebase + منطق المنصة -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      addDoc,
-      getDocs,
-      query,
-      orderBy,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBAC-051sVaiI9gF-9AmP_3ltGfRfrfrzw",
-      authDomain: "gpu-platform-ca19e.firebaseapp.com",
-      projectId: "gpu-platform-ca19e",
-      storageBucket: "gpu-platform-ca19e.firebasestorage.app",
-      messagingSenderId: "157870824690",
-      appId: "1:157870824690:web:692e4dbec2addfbb04c46b"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db  = getFirestore(app);
-
-    const PLATFORM_PERCENT = 0.20;
-
-    const stationForm    = document.getElementById("stationForm");
-    const stationsList   = document.getElementById("stationsList");
-    const adminForm      = document.getElementById("adminForm");
-    const adminDashboard = document.getElementById("adminDashboard");
-    const refreshDashBtn = document.getElementById("refreshDashboardBtn");
-    const btnAr          = document.getElementById("btn-ar");
-    const btnEn          = document.getElementById("btn-en");
-
-    const translations = {
-      ar: {
-        title: "منصة تأجير وحدات GPU",
-        hero_badge: "منصة واحدة تجمع ملاك الـ GPU مع المطورين حول العالم.",
-        hero_sub: "سجّل محطتك، حدّد سعر الساعة، واترك المنصة تتولى عمليات الحجز والدفع. المطور يختار المحطة ويدفع أونلاين ويصله رابط الدخول فوراً.",
-        hero_pill_instant: "استئجار سريع ودفع فوري عبر PayPal",
-        hero_pill_platform_cut: "المنصة تأخذ 20% – والباقي لصاحب المحطة",
-        hero_pill_multi: "مناسب للذكاء الاصطناعي، التدريب، والرندر",
-        hero_metric_stations: "محطة يمكن إضافتها بسهولة",
-        hero_metric_online: "حجوزات من أي مكان في العالم",
-        ticker_1: "ملاك الـ GPU يربحون أثناء نومهم – المنصة تدير الحجوزات.",
-        ticker_2: "المطورون يحصلون على قوة معالجة عند الطلب بدون شراء أجهزة غالية.",
-        ticker_3: "سجّل محطتك الآن، وحدد سعرك، وابدأ بتحويل استثمارك في الـ GPU إلى دخل شهري.",
-
-        section_register: "تسجيل محطة جديدة",
-        section_stations: "المحطات المتاحة للاستئجار",
-        section_admin_msg: "رسالة للإدارة",
-        section_dashboard: "لوحة الإدارة (ملخص الأرباح)",
-        owner_name_label: "اسم صاحب المحطة",
-        contact_label: "وسيلة تواصل المالك (لن تظهر للزوار)",
-        gpu_type_label: "نوع بطاقة الرسومات (GPU)",
-        performance_label: "قوة المحطة / الأداء الفعلي",
-        perf_strong: "قوية (مشاريع ثقيلة / تدريب نماذج كبيرة)",
-        perf_medium: "متوسطة (مشاريع متوسطة / تجارب)",
-        perf_weak: "خفيفة (تصفح / تجارب بسيطة)",
-        price_label: "السعر لكل ساعة (بالدولار)",
-        country_label: "الدولة",
-        city_label: "المدينة",
-        owner_payout_label: "بيانات استلام أرباح المالك (لن تظهر للزوار)",
-        access_url_label: "رابط الدخول إلى السيرفر (لن يظهر للزوار)",
-        notes_label: "ملاحظات عن المحطة (اختياري)",
-        save_station_btn: "حفظ المحطة",
-        loading_stations: "جاري تحميل المحطات...",
-        admin_name_label: "اسمك",
-        admin_contact_label: "وسيلة التواصل",
-        admin_type_label: "نوع الرسالة",
-        admin_type_question: "استفسار",
-        admin_type_issue: "بلاغ عن مشكلة",
-        admin_type_suggestion: "اقتراح تطوير",
-        admin_message_label: "محتوى الرسالة",
-        send_admin_btn: "إرسال الرسالة",
-        dashboard_desc: "هذا القسم يظهر لك إجمالي الساعات والمبالغ لكل محطة، ونصيب المنصة ونصيب صاحب المحطة، حسب الطلبات المسجلة في النظام.",
-        refresh_dashboard_btn: "تحديث الإحصائيات",
-        footer_text: "منصة تأجير وحدات GPU – الدفع يتم عبر PayPal لحساب المنصة، ويتم حساب نصيب المنصة وصاحب المحطة لكل عملية استئجار.",
-        placeholder_ownerName: "Example: Adam Smith",
-        placeholder_contactMethod: "Example: WhatsApp or email",
-        placeholder_pricePerHour: "Example: 0.50",
-        placeholder_country: "Example: Oman",
-        placeholder_city: "Example: Salalah",
-        placeholder_ownerPayoutInfo: "Example: IBAN / bank account / PayPal link",
-        placeholder_notes: "Example: Fast internet, usually online most of the day...",
-        placeholder_accessUrl: "Example: RDP / AnyDesk / RustDesk URL",
-        placeholder_adminName: "اكتب اسمك هنا",
-        placeholder_adminContact: "مثال: بريد إلكتروني أو رقم واتساب",
-        placeholder_adminMessage: "اكتب رسالتك أو استفسارك بالتفصيل",
-        rent_btn: "استئجار الآن",
-        owner_text: "المالك",
-        location_text: "الموقع",
-        notes_text: "ملاحظات:",
-        hours_label: "عدد الساعات",
-        dashboard_th_station: "المحطة",
-        dashboard_th_location: "الموقع",
-        dashboard_th_hours: "إجمالي الساعات",
-        dashboard_th_total: "إجمالي المبلغ",
-        dashboard_th_platform: "نصيب المنصة",
-        dashboard_th_owner: "نصيب المالك",
-        dashboard_th_payout: "بيانات تحويل المالك",
-        no_stations: "لا توجد محطات مسجلة حتى الآن.",
-        error_load_stations: "حدث خطأ أثناء تحميل المحطات.",
-        error_save_station: "حدث خطأ أثناء حفظ المحطة. تأكد من إعدادات Firebase.",
-        station_saved: "تم حفظ المحطة بنجاح ✅",
-        form_error_station: "الرجاء تعبئة الاسم، وسيلة التواصل، والسعر بشكل صحيح.",
-        form_error_admin: "الرجاء تعبئة جميع الحقول في رسالة الإدارة.",
-        admin_msg_sent: "تم إرسال الرسالة للإدارة ✅",
-        error_admin_msg: "حدث خطأ أثناء إرسال الرسالة.",
-        error_dashboard: "حدث خطأ أثناء تحميل الإحصائيات.",
-        no_rentals: "لا توجد طلبات استئجار حتى الآن.",
-        rental_hours_error: "الرجاء إدخال عدد ساعات صحيح.",
-        rental_price_error: "السعر غير مضبوط لهذه المحطة.",
-        rental_confirm_title: "تفاصيل المحطة المختارة:",
-        rental_gpu: "نوع الـGPU",
-        rental_perf: "قوة المحطة",
-        rental_loc: "الموقع",
-        rental_hours: "عدد الساعات",
-        rental_price_hour: "السعر للساعة",
-        rental_total: "المبلغ الكلي",
-        rental_platform: "نسبة المنصة (تقريبًا)",
-        rental_owner: "نصيب المالك (تقريبًا)",
-        rental_continue_paypal: "هل تريد المتابعة للدفع عبر PayPal؟",
-        owner_payout_missing: "لم يتم إدخال بيانات التحويل للمالك",
-        server_link_msg: "تم الدفع بنجاح ✅\\n\\nرابط الدخول إلى السيرفر:",
-        server_link_warning: "رجاءً لا تشارك هذا الرابط مع أحد."
+  <script>
+    // -------- إعداد المحطات (غيرها كما تريد) --------
+    const stations = [
+      {
+        id: "s1",
+        ownerName: "Adam Smith",
+        gpuType: "RTX 4090",
+        location: "Salalah, Oman",
+        pricePerHour: 0.5,
+        maxHours: 8,
+        accessUrl: "rdp://your-rdp-or-anydesk-link-1"
       },
-      en: {
-        title: "GPU Rental Platform",
-        hero_badge: "One hub connecting GPU owners with developers worldwide.",
-        hero_sub: "Register your station, set your hourly rate, and let the platform manage bookings and payments. Developers choose a station, pay online, and receive instant access.",
-        hero_pill_instant: "Instant rental and PayPal payments",
-        hero_pill_platform_cut: "Platform takes 20% – the rest for the owner",
-        hero_pill_multi: "Perfect for AI, training, and render workloads",
-        hero_metric_stations: "stations can be onboarded easily",
-        hero_metric_online: "online bookings from anywhere",
-        ticker_1: "GPU owners earn while they sleep – the platform manages bookings.",
-        ticker_2: "Developers get on-demand compute without buying expensive hardware.",
-        ticker_3: "Register your station, set your price, and turn your GPU into monthly income.",
-
-        section_register: "Register a New Station",
-        section_stations: "Available Stations for Rent",
-        section_admin_msg: "Message to Admin",
-        section_dashboard: "Admin Dashboard (Earnings Summary)",
-        owner_name_label: "Station Owner Name",
-        contact_label: "Owner Contact (hidden from visitors)",
-        gpu_type_label: "GPU Type",
-        performance_label: "Station Power / Performance",
-        perf_strong: "Strong (heavy projects / large models)",
-        perf_medium: "Medium (normal projects / experiments)",
-        perf_weak: "Light (browsing / small tests)",
-        price_label: "Price per Hour (USD)",
-        country_label: "Country",
-        city_label: "City",
-        owner_payout_label: "Owner Payout Details (hidden from visitors)",
-        access_url_label: "Server Access URL (hidden from visitors)",
-        notes_label: "Station Notes (optional)",
-        save_station_btn: "Save Station",
-        loading_stations: "Loading stations...",
-        admin_name_label: "Your Name",
-        admin_contact_label: "Contact Method",
-        admin_type_label: "Message Type",
-        admin_type_question: "Question",
-        admin_type_issue: "Issue Report",
-        admin_type_suggestion: "Improvement Suggestion",
-        admin_message_label: "Message Content",
-        send_admin_btn: "Send Message",
-        dashboard_desc: "This section shows total hours and amounts per station, plus platform and owner shares, based on recorded rental requests.",
-        refresh_dashboard_btn: "Refresh Stats",
-        footer_text: "GPU Rental Platform – Payments are processed via PayPal to the platform account. Platform and owner shares are calculated per rental.",
-        placeholder_ownerName: "Example: Adam Smith",
-        placeholder_contactMethod: "Example: WhatsApp or email",
-        placeholder_pricePerHour: "Example: 0.50",
-        placeholder_country: "Example: Oman",
-        placeholder_city: "Example: Salalah",
-        placeholder_ownerPayoutInfo: "Example: IBAN / bank account / PayPal link",
-        placeholder_notes: "Example: Fast internet, usually online most of the day...",
-        placeholder_accessUrl: "Example: RDP / AnyDesk / RustDesk URL",
-        placeholder_adminName: "Write your name here",
-        placeholder_adminContact: "Example: email or WhatsApp number",
-        placeholder_adminMessage: "Write your message or question in detail",
-        rent_btn: "Rent Now",
-        owner_text: "Owner",
-        location_text: "Location",
-        notes_text: "Notes:",
-        hours_label: "Hours",
-        dashboard_th_station: "Station",
-        dashboard_th_location: "Location",
-        dashboard_th_hours: "Total Hours",
-        dashboard_th_total: "Total Amount",
-        dashboard_th_platform: "Platform Share",
-        dashboard_th_owner: "Owner Share",
-        dashboard_th_payout: "Owner Payout Details",
-        no_stations: "No stations registered yet.",
-        error_load_stations: "Error loading stations.",
-        error_save_station: "Error saving station. Check Firebase settings.",
-        station_saved: "Station saved successfully ✅",
-        form_error_station: "Please fill owner name, contact, and price correctly.",
-        form_error_admin: "Please fill all admin message fields.",
-        admin_msg_sent: "Admin message sent ✅",
-        error_admin_msg: "Error sending admin message.",
-        error_dashboard: "Error loading dashboard data.",
-        no_rentals: "No rental requests yet.",
-        rental_hours_error: "Please enter a valid number of hours.",
-        rental_price_error: "Price is not set correctly for this station.",
-        rental_confirm_title: "Selected Station Details:",
-        rental_gpu: "GPU Type",
-        rental_perf: "Station Power",
-        rental_loc: "Location",
-        rental_hours: "Hours",
-        rental_price_hour: "Price per Hour",
-        rental_total: "Total Amount",
-        rental_platform: "Platform Share (approx)",
-        rental_owner: "Owner Share (approx)",
-        rental_continue_paypal: "Do you want to continue to PayPal?",
-        owner_payout_missing: "Owner payout details not provided",
-        server_link_msg: "Payment completed ✅\\n\\nServer access link:",
-        server_link_warning: "Please do not share this link with anyone."
+      {
+        id: "s2",
+        ownerName: "John Miller",
+        gpuType: "RTX 3090",
+        location: "Dubai, UAE",
+        pricePerHour: 0.4,
+        maxHours: 6,
+        accessUrl: "rdp://your-rdp-or-anydesk-link-2"
       }
-    };
+    ];
 
-    let currentLang = "ar";
+    // حالة الاستئجار لكل محطة
+    const rentals = {}; // stationId -> {secondsLeft, timerId}
 
-    function setLang(lang) {
-      currentLang = lang;
-      const t = translations[lang];
+    let currentStation = null;
+    let currentHours = 1;
+    let currentTotal = 0;
 
-      document.documentElement.lang = lang === "ar" ? "ar" : "en";
-      document.documentElement.dir  = lang === "ar" ? "rtl" : "ltr";
+    // رسم المحطات
+    const container = document.getElementById("stations-container");
+    function renderStations(){
+      container.innerHTML = "";
+      stations.forEach(st => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.id = "card-"+st.id;
 
-      btnAr.classList.toggle("active", lang === "ar");
-      btnEn.classList.toggle("active", lang === "en");
-
-      document.querySelectorAll("[data-i18n]").forEach(el => {
-        const key = el.getAttribute("data-i18n");
-        if (t[key]) el.textContent = t[key];
-      });
-
-      document.querySelectorAll("[data-i18n-option]").forEach(el => {
-        const key = el.getAttribute("data-i18n-option");
-        if (t[key]) el.textContent = t[key];
-      });
-
-      const placeholders = [
-        ["ownerName", "placeholder_ownerName"],
-        ["contactMethod", "placeholder_contactMethod"],
-        ["pricePerHour", "placeholder_pricePerHour"],
-        ["country", "placeholder_country"],
-        ["city", "placeholder_city"],
-        ["ownerPayoutInfo", "placeholder_ownerPayoutInfo"],
-        ["notes", "placeholder_notes"],
-        ["accessUrl", "placeholder_accessUrl"],
-        ["adminName", "placeholder_adminName"],
-        ["adminContact", "placeholder_adminContact"],
-        ["adminMessage", "placeholder_adminMessage"]
-      ];
-      placeholders.forEach(([id, key]) => {
-        const el = document.getElementById(id);
-        if (el && t[key]) el.placeholder = t[key];
-      });
-
-      loadStations();
-      loadDashboard();
-    }
-
-    btnAr.addEventListener("click", () => setLang("ar"));
-    btnEn.addEventListener("click", () => setLang("en"));
-
-    // إضافة محطة
-    stationForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const t = translations[currentLang];
-
-      const ownerName       = document.getElementById("ownerName").value.trim();
-      const contactMethod   = document.getElementById("contactMethod").value.trim();
-      const gpuType         = document.getElementById("gpuType").value;
-      const performance     = document.getElementById("performance").value;
-      const pricePerHour    = parseFloat(document.getElementById("pricePerHour").value);
-      const country         = document.getElementById("country").value.trim();
-      const city            = document.getElementById("city").value.trim();
-      const ownerPayoutInfo = document.getElementById("ownerPayoutInfo").value.trim();
-      const accessUrl       = document.getElementById("accessUrl").value.trim();
-      const notes           = document.getElementById("notes").value.trim();
-
-      if (!ownerName || !contactMethod || isNaN(pricePerHour)) {
-        alert(t.form_error_station);
-        return;
-      }
-
-      try {
-        await addDoc(collection(db, "stations"), {
-          ownerName,
-          contactMethod,
-          gpuType,
-          performance,
-          pricePerHour,
-          country,
-          city,
-          ownerPayoutInfo,
-          accessUrl,
-          notes,
-          createdAt: serverTimestamp()
-        });
-        alert(t.station_saved);
-        stationForm.reset();
-        loadStations();
-      } catch (err) {
-        console.error(err);
-        alert(t.error_save_station);
-      }
-    });
-
-    function performanceBadge(perf) {
-      if (!perf) return "";
-      let cls  = "perf-medium";
-      let text = perf;
-      if (perf === "Strong") {
-        cls  = "perf-strong";
-        text = currentLang === "ar" ? "قوية" : "Strong";
-      } else if (perf === "Weak") {
-        cls  = "perf-weak";
-        text = currentLang === "ar" ? "ضعيفة" : "Light";
-      } else {
-        cls  = "perf-medium";
-        text = currentLang === "ar" ? "متوسطة" : "Medium";
-      }
-      const label = currentLang === "ar" ? "قوة المحطة" : "Power";
-      return `<span class="perf-badge ${cls}">${label}: ${text}</span>`;
-    }
-
-    // تحميل المحطات + زر PayPal لكل محطة
-    async function loadStations() {
-      const t = translations[currentLang];
-      stationsList.innerHTML = `<p class="muted">${t.loading_stations}</p>`;
-
-      try {
-        const qStations = query(
-          collection(db, "stations"),
-          orderBy("createdAt", "desc")
-        );
-        const snapshot = await getDocs(qStations);
-
-        if (snapshot.empty) {
-          stationsList.innerHTML = `<p class="muted">${t.no_stations}</p>`;
-          return;
-        }
-
-        stationsList.innerHTML = "";
-
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          const id   = docSnap.id;
-
-          const price = data.pricePerHour ? Number(data.pricePerHour) : 0;
-          const priceText = price
-            ? `$${price.toFixed(2)} / ${currentLang === "ar" ? "ساعة" : "hour"}`
-            : (currentLang === "ar" ? "غير محدد" : "Not set");
-
-          const ownerLabel    = t.owner_text + ":";
-          const locationLabel = t.location_text + ":";
-
-          const locationStr =
-            (data.country || "") +
-            (data.country && data.city ? " - " : "") +
-            (data.city || "");
-
-          const notesLabel = t.notes_text;
-          const hoursLabel = t.hours_label;
-
-          const card = document.createElement("div");
-          card.className = "station-card";
-
-          card.innerHTML = `
-            <div class="station-header">
-              <div>
-                <div class="station-name">${data.gpuType || "GPU"}</div>
-                <div class="muted">${ownerLabel} ${data.ownerName || "-"}</div>
-                <div class="muted">${locationLabel} ${locationStr}</div>
-                ${performanceBadge(data.performance)}
-              </div>
-              <div class="price-badge">${priceText}</div>
+        card.innerHTML = `
+          <div class="card-header">
+            <div>
+              <div style="font-size:15px;font-weight:700">${st.gpuType}</div>
+              <div class="value" style="font-size:11px;color:#9ca3af">المالك: <strong>${st.ownerName}</strong></div>
             </div>
-            ${
-              data.notes
-                ? `<div class="muted" style="margin-top:4px;">${notesLabel} ${data.notes}</div>`
-                : ""
-            }
-            <div class="row">
-              <div>
-                <label style="font-size:12px;">${hoursLabel}</label>
-                <input id="hours-${id}" class="small-input" type="number" min="1" value="1" />
-              </div>
-              <div style="flex:1;">
-                <div id="paypal-btn-${id}" class="paybox"></div>
-              </div>
-            </div>
-          `;
+            <span class="badge">متاحة للاستئجار</span>
+          </div>
+          <div class="value" style="font-size:11px;color:#9ca3af">الموقع: ${st.location}</div>
+          <div class="value">السعر للساعة: <strong>$${st.pricePerHour.toFixed(2)}</strong></div>
 
-          stationsList.appendChild(card);
+          <label class="label">عدد الساعات (حتى ${st.maxHours} ساعة)</label>
+          <input class="input" type="number" min="1" max="${st.maxHours}" value="1" id="hours-${st.id}" />
 
-          const accessUrl = data.accessUrl || "";
+          <div class="row">
+            <span>المجموع:</span>
+            <strong id="total-${st.id}">$${st.pricePerHour.toFixed(2)}</strong>
+          </div>
 
-          if (window.paypal) {
-            window.paypal.Buttons({
-              style: {
-                layout: 'horizontal',
-                color: 'gold',
-                shape: 'pill',
-                label: 'pay'
-              },
+          <button class="btn" id="rent-${st.id}">استئجار الآن عبر PayPal</button>
+          <p class="hint">بعد الدفع مباشرة سيظهر لك رابط السيرفر مع عدّاد للوقت.</p>
 
-              createOrder: function (dataBtn, actions) {
-                const hoursInput = document.getElementById(`hours-${id}`);
-                const hours = parseInt(hoursInput?.value || "0", 10);
-
-                if (!hours || hours <= 0) {
-                  alert(t.rental_hours_error);
-                  return;
-                }
-                if (!price || price <= 0) {
-                  alert(t.rental_price_error);
-                  return;
-                }
-
-                const total = (hours * price).toFixed(2);
-
-                return actions.order.create({
-                  purchase_units: [{
-                    amount: {
-                      value: total
-                    },
-                    description: `GPU ${data.gpuType || "GPU"} - ${hours}h`
-                  }]
-                });
-              },
-
-              onApprove: function (dataBtn, actions) {
-                return actions.order.capture().then(async function (details) {
-                  const hoursInput = document.getElementById(`hours-${id}`);
-                  const hours = parseInt(hoursInput?.value || "0", 10);
-                  const total = (hours * price).toFixed(2);
-                  const platformAmount = (total * PLATFORM_PERCENT).toFixed(2);
-                  const ownerAmount    = (total - total * PLATFORM_PERCENT).toFixed(2);
-
-                  try {
-                    await addDoc(collection(db, "rentalRequests"), {
-                      stationId: id,
-                      hours,
-                      pricePerHour: price,
-                      total: Number(total),
-                      platformAmount: Number(platformAmount),
-                      ownerAmount: Number(ownerAmount),
-                      createdAt: serverTimestamp(),
-                      status: "مدفوع",
-                      payerName: details.payer?.name?.given_name || "",
-                      payerId: details.payer?.payer_id || "",
-                      orderId: dataBtn.orderID
-                    });
-                  } catch (e) {
-                    console.error(e);
-                  }
-
-                  if (accessUrl) {
-                    const msg =
-                      `${t.server_link_msg}\\n${accessUrl}\\n\\n${t.server_link_warning}`;
-                    alert(msg);
-                    window.open(accessUrl, "_blank");
-                  } else {
-                    alert(
-                      currentLang === "ar"
-                        ? "تم الدفع بنجاح، لكن لم يتم ضبط رابط السيرفر لهذه المحطة بعد."
-                        : "Payment completed, but this station has no server URL set yet."
-                    );
-                  }
-                });
-              },
-
-              onError: function (err) {
-                console.error(err);
-                alert(
-                  currentLang === "ar"
-                    ? "حدث خطأ أثناء الدفع عبر PayPal."
-                    : "An error occurred during PayPal payment."
-                );
-              }
-            }).render(`#paypal-btn-${id}`);
-          }
-        });
-      } catch (err) {
-        console.error(err);
-        stationsList.innerHTML = `<p class="muted">${translations[currentLang].error_load_stations}</p>`;
-      }
-    }
-
-    // رسالة الإدارة
-    adminForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const t = translations[currentLang];
-
-      const name    = document.getElementById("adminName").value.trim();
-      const contact = document.getElementById("adminContact").value.trim();
-      const type    = document.getElementById("adminType").value;
-      const message = document.getElementById("adminMessage").value.trim();
-
-      if (!name || !contact || !message) {
-        alert(t.form_error_admin);
-        return;
-      }
-
-      try {
-        await addDoc(collection(db, "adminMessages"), {
-          name,
-          contact,
-          type,
-          message,
-          createdAt: serverTimestamp(),
-          status: "جديد"
-        });
-
-        alert(t.admin_msg_sent);
-        adminForm.reset();
-      } catch (err) {
-        console.error(err);
-        alert(t.error_admin_msg);
-      }
-    });
-
-    // لوحة الإدارة
-    async function loadDashboard() {
-      const t = translations[currentLang];
-      adminDashboard.innerHTML = `<p class="muted">${t.loading_stations}</p>`;
-
-      try {
-        const stationsSnap = await getDocs(collection(db, "stations"));
-        const stationsMap = {};
-        stationsSnap.forEach((docSnap) => {
-          stationsMap[docSnap.id] = docSnap.data();
-        });
-
-        const reqSnap = await getDocs(
-          query(collection(db, "rentalRequests"), orderBy("createdAt", "desc"))
-        );
-
-        if (reqSnap.empty) {
-          adminDashboard.innerHTML = `<p class="muted">${t.no_rentals}</p>`;
-          return;
-        }
-
-        const summary = {};
-        reqSnap.forEach((docSnap) => {
-          const d = docSnap.data();
-          const sid = d.stationId;
-          if (!summary[sid]) {
-            summary[sid] = { hours: 0, total: 0, platform: 0, owner: 0 };
-          }
-          summary[sid].hours    += Number(d.hours || 0);
-          summary[sid].total    += Number(d.total || 0);
-          summary[sid].platform += Number(d.platformAmount || 0);
-          summary[sid].owner    += Number(d.ownerAmount || 0);
-        });
-
-        let html = `
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>${t.dashboard_th_station}</th>
-                <th>${t.dashboard_th_location}</th>
-                <th>${t.dashboard_th_hours}</th>
-                <th>${t.dashboard_th_total}</th>
-                <th>${t.dashboard_th_platform}</th>
-                <th>${t.dashboard_th_owner}</th>
-                <th>${t.dashboard_th_payout}</th>
-              </tr>
-            </thead>
-            <tbody>
+          <div id="success-${st.id}"></div>
         `;
 
-        Object.keys(summary).forEach((sid) => {
-          const sData = stationsMap[sid] || {};
-          const sSum  = summary[sid];
-
-          const locText =
-            (sData.country || "") +
-            (sData.country && sData.city ? " - " : "") +
-            (sData.city || "");
-
-          html += `
-            <tr>
-              <td>
-                ${sData.gpuType || "GPU"}<br/>
-                <span class="muted">${sData.ownerName || ""}</span><br/>
-                ${performanceBadge(sData.performance || "")}
-              </td>
-              <td>${locText}</td>
-              <td>${sSum.hours.toFixed(0)}</td>
-              <td>$${sSum.total.toFixed(2)}</td>
-              <td><span class="pill pill-platform">$${sSum.platform.toFixed(2)}</span></td>
-              <td><span class="pill pill-owner">$${sSum.owner.toFixed(2)}</span></td>
-              <td style="text-align:right;">
-                <span class="muted">
-                  ${
-                    sData.ownerPayoutInfo
-                      ? sData.ownerPayoutInfo.replace(/\n/g, "<br/>")
-                      : t.owner_payout_missing
-                  }
-                </span>
-              </td>
-            </tr>
-          `;
+        // تحديث السعر عند تغيير الساعات
+        const hoursInput = card.querySelector("#hours-"+st.id);
+        const totalLabel = card.querySelector("#total-"+st.id);
+        hoursInput.addEventListener("input", () => {
+          let h = parseInt(hoursInput.value || "1",10);
+          if(h<1) h=1;
+          if(h>st.maxHours) h=st.maxHours;
+          hoursInput.value = h;
+          totalLabel.textContent = "$"+(h*st.pricePerHour).toFixed(2);
         });
 
-        html += "</tbody></table>";
-        adminDashboard.innerHTML = html;
+        // زر الاستئجار
+        const btn = card.querySelector("#rent-"+st.id);
+        btn.addEventListener("click", () => startRent(st));
 
-      } catch (err) {
-        console.error(err);
-        adminDashboard.innerHTML = `<p class="muted">${translations[currentLang].error_dashboard}</p>`;
-      }
+        container.appendChild(card);
+      });
     }
 
-    refreshDashBtn.addEventListener("click", loadDashboard);
+    // بدء الاستئجار (فتح النافذة + تجهيز PayPal)
+    function startRent(station){
+      const hoursInput = document.getElementById("hours-"+station.id);
+      const h = parseInt(hoursInput.value || "1",10);
+      if(isNaN(h) || h <= 0){
+        showGlobalError("اختر عدد ساعات صحيح.");
+        return;
+      }
+      if(h > station.maxHours){
+        showGlobalError("أقصى عدد ساعات للمحطة هو "+station.maxHours);
+        return;
+      }
 
-    // تشغيل أولي
-    setLang("ar");
+      currentStation = station;
+      currentHours = h;
+      currentTotal = +(h * station.pricePerHour).toFixed(2);
+
+      const desc = document.getElementById("modal-desc");
+      desc.textContent = `المحطة: ${station.gpuType} – عدد الساعات: ${h} – المبلغ: $${currentTotal.toFixed(2)}`;
+
+      openModal();
+      renderPayPalButton();
+    }
+
+    function showGlobalError(msg){
+      const box = document.getElementById("global-error");
+      box.textContent = "⚠️ " + msg;
+      box.style.display = "block";
+      setTimeout(() => { box.style.display = "none"; }, 5000);
+    }
+
+    // نافذة
+    const modal = document.getElementById("paypal-modal");
+    function openModal(){ modal.classList.add("show"); }
+    function closeModal(){ modal.classList.remove("show"); }
+
+    // رسم زر PayPal
+    function renderPayPalButton(){
+      const container = document.getElementById("paypal-button-container");
+      container.innerHTML = ""; // إعادة رسم
+
+      if(!currentStation){
+        container.innerHTML = "<p style='font-size:12px'>خطأ في اختيار المحطة.</p>";
+        return;
+      }
+
+      paypal.Buttons({
+        style:{
+          layout:"vertical",
+          color:"gold",
+          shape:"pill",
+          label:"pay"
+        },
+        createOrder: function(data, actions){
+          return actions.order.create({
+            purchase_units:[{
+              amount:{
+                currency_code:"USD",
+                value: currentTotal.toFixed(2)
+              },
+              description:`GPU Rental: ${currentStation.gpuType} - ${currentHours}h`
+            }]
+          });
+        },
+        onApprove: function(data, actions){
+          return actions.order.capture().then(function(details){
+            closeModal();
+            handlePaymentSuccess(details);
+          });
+        },
+        onCancel: function(){
+          // لا شيء، فقط يبقى كما هو
+        },
+        onError: function(err){
+          console.error(err);
+          showGlobalError("حدث خطأ مع PayPal، حاول مرة أخرى.");
+        }
+      }).render("#paypal-button-container");
+    }
+
+    // بعد الدفع الناجح
+    function handlePaymentSuccess(details){
+      if(!currentStation) return;
+
+      const st = currentStation;
+      const successDiv = document.getElementById("success-"+st.id);
+      successDiv.innerHTML = ""; // مسح أي شيء قديم
+
+      const wrap = document.createElement("div");
+
+      const successBox = document.createElement("div");
+      successBox.className = "success-box";
+      successBox.innerHTML = `
+        <div style="margin-bottom:4px;font-weight:600">✅ تم الدفع بنجاح عبر PayPal</div>
+        <div style="margin-bottom:4px">رقم العملية: <span style="font-size:10px">${details.id}</span></div>
+        <div style="margin-bottom:2px;color:#9ca3af">رابط الدخول إلى السيرفر (لا تشاركه مع أحد):</div>
+        <a href="${st.accessUrl}" target="_blank" rel="noreferrer">${st.accessUrl}</a>
+      `;
+
+      const timerBox = document.createElement("div");
+      timerBox.className = "timer-box";
+      const totalSeconds = currentHours * 3600; // 3600 = ساعة حقيقية
+      rentals[st.id] && clearInterval(rentals[st.id].timerId);
+      rentals[st.id] = {
+        secondsLeft: totalSeconds,
+        timerId: null
+      };
+
+      const timerLabel = document.createElement("div");
+      timerLabel.style.fontSize = "11px";
+      timerLabel.style.color = "#9ca3af";
+      timerLabel.textContent = "الوقت المتبقي للاستخدام:";
+
+      const timerValue = document.createElement("div");
+      timerValue.className = "timer";
+      timerValue.id = "timer-"+st.id;
+
+      timerBox.appendChild(timerLabel);
+      timerBox.appendChild(timerValue);
+
+      wrap.appendChild(successBox);
+      wrap.appendChild(timerBox);
+      successDiv.appendChild(wrap);
+
+      startTimer(st.id);
+    }
+
+    // عدّاد الوقت
+    function startTimer(stationId){
+      const rental = rentals[stationId];
+      if(!rental) return;
+
+      function format(sec){
+        const h = Math.floor(sec/3600);
+        const m = Math.floor((sec%3600)/60);
+        const s = sec%60;
+        return String(h).padStart(2,"0")+":"+
+               String(m).padStart(2,"0")+":"+
+               String(s).padStart(2,"0");
+      }
+
+      const el = document.getElementById("timer-"+stationId);
+      if(!el) return;
+
+      el.textContent = format(rental.secondsLeft);
+
+      rental.timerId = setInterval(() => {
+        rental.secondsLeft--;
+        if(rental.secondsLeft <= 0){
+          clearInterval(rental.timerId);
+          el.textContent = "00:00:00";
+          // إخفاء الرابط بعد انتهاء الوقت
+          const successDiv = document.getElementById("success-"+stationId);
+          if(successDiv){
+            const msg = document.createElement("div");
+            msg.style.marginTop = "6px";
+            msg.style.fontSize = "11px";
+            msg.style.color = "#f97316";
+            msg.textContent = "⏱ انتهى الوقت المسموح، لا يحق استخدام السيرفر بعد هذه اللحظة.";
+            successDiv.appendChild(msg);
+          }
+        }else{
+          el.textContent = format(rental.secondsLeft);
+        }
+      },1000);
+    }
+
+    // بداية التشغيل
+    renderStations();
   </script>
 </body>
-  </html>
+</html>
