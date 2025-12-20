@@ -6,7 +6,7 @@ import {
   Cpu, Wallet, Activity, Clock, Server, Globe, Zap, 
   LogOut, Menu, X, ChevronRight, Play, Square, 
   DollarSign, BarChart3, Settings, Users, Home,
-  Plus, RefreshCw, CreditCard, FileText, AlertCircle
+  Plus, RefreshCw, CreditCard, FileText, AlertCircle, Bell
 } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./components/ui/card";
@@ -21,10 +21,100 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter
 } from "./components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
+} from "./components/ui/dropdown-menu";
 import "./App.css";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+
+// ============== NOTIFICATION BELL COMPONENT ==============
+const NotificationBell = ({ token }) => {
+  const [notifications, setNotifications] = useState([]);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 10000); // كل 10 ثوانٍ
+    return () => clearInterval(interval);
+  }, [token]);
+
+  const fetchNotifications = async () => {
+    if (!token) return;
+    try {
+      const res = await axios.get(`${API}/notifications`, { headers: { Authorization: `Bearer ${token}` } });
+      setNotifications(res.data);
+      
+      // Show toast for urgent unread notifications
+      const urgent = res.data.filter(n => n.urgent && !n.read);
+      urgent.forEach(n => {
+        toast.warning(n.title, { description: n.message, duration: 10000 });
+      });
+    } catch (e) {}
+  };
+
+  const markAsRead = async (id) => {
+    try {
+      await axios.post(`${API}/notifications/${id}/read`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      fetchNotifications();
+    } catch (e) {}
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const getIcon = (type) => {
+    switch(type) {
+      case 'auto_stop': return '🛑';
+      case 'low_balance_warning': return '⚠️';
+      case 'seamless_failover': return '🔄';
+      default: return '🔔';
+    }
+  };
+
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="relative" data-testid="notification-bell">
+          <Bell className="w-5 h-5" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF4757] text-white text-xs rounded-full flex items-center justify-center">
+              {unreadCount}
+            </span>
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-80 bg-[#12121A] border-[#1E1E2E]">
+        <div className="p-3 border-b border-[#1E1E2E]">
+          <h3 className="font-semibold">الإشعارات</h3>
+        </div>
+        <div className="max-h-80 overflow-y-auto">
+          {notifications.length === 0 ? (
+            <div className="p-4 text-center text-[#8B8B9E]">لا توجد إشعارات</div>
+          ) : (
+            notifications.slice(0, 10).map((n) => (
+              <DropdownMenuItem 
+                key={n.id} 
+                className={`p-3 cursor-pointer ${!n.read ? 'bg-[#00D4FF]/5' : ''}`}
+                onClick={() => markAsRead(n.id)}
+              >
+                <div className="flex gap-3 w-full">
+                  <span className="text-xl">{getIcon(n.type)}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium ${n.urgent ? 'text-[#FF4757]' : ''}`}>{n.title}</p>
+                    <p className="text-xs text-[#8B8B9E] truncate">{n.message}</p>
+                    <p className="text-xs text-[#8B8B9E] mt-1">{new Date(n.created_at).toLocaleString('ar')}</p>
+                  </div>
+                  {!n.read && <div className="w-2 h-2 bg-[#00D4FF] rounded-full"></div>}
+                </div>
+              </DropdownMenuItem>
+            ))
+          )}
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
 
 // Auth Context
 const AuthContext = createContext(null);
