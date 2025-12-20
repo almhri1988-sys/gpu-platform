@@ -298,6 +298,214 @@ async def get_regions():
         })
     return region_stats
 
+# ============== HEALTH MONITORING & FAILOVER ==============
+
+async def check_gpu_health(gpu_id: str) -> dict:
+    """Simulate real-time GPU health check"""
+    import random
+    gpu = await db.gpus.find_one({"id": gpu_id}, {"_id": 0})
+    if not gpu:
+        return {"status": "offline", "issues": ["GPU not found"]}
+    
+    # Simulated health metrics (in real system, this comes from GPU agent)
+    random.seed(hash(gpu_id + str(datetime.now(timezone.utc).minute)))
+    
+    health = {
+        "gpu_id": gpu_id,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "temperature": random.randint(40, 80),
+        "memory_health": random.randint(85, 100),
+        "gpu_utilization": random.randint(50, 99),
+        "memory_utilization": random.randint(40, 95),
+        "power_draw": random.randint(200, 400),
+        "fan_speed": random.randint(30, 80),
+        "errors": 0,
+        "latency": gpu.get("latency", 20) + random.randint(-5, 10),
+    }
+    
+    # Determine status and issues
+    issues = []
+    status = "healthy"
+    
+    if health["temperature"] >= HEALTH_THRESHOLDS["temperature_critical"]:
+        status = "critical"
+        issues.append(f"درجة حرارة حرجة: {health['temperature']}°C")
+    elif health["temperature"] >= HEALTH_THRESHOLDS["temperature_warning"]:
+        status = "warning"
+        issues.append(f"درجة حرارة مرتفعة: {health['temperature']}°C")
+    
+    if health["memory_health"] < HEALTH_THRESHOLDS["memory_health_min"]:
+        status = "warning" if status != "critical" else status
+        issues.append(f"صحة الذاكرة منخفضة: {health['memory_health']}%")
+    
+    if health["latency"] > HEALTH_THRESHOLDS["latency_max"]:
+        status = "warning" if status != "critical" else status
+        issues.append(f"زمن استجابة عالي: {health['latency']}ms")
+    
+    health["status"] = status
+    health["issues"] = issues
+    health["needs_failover"] = status == "critical"
+    
+    return health
+
+async def find_replacement_gpu(original_gpu: dict) -> Optional[dict]:
+    """Find a replacement GPU with similar or better specs"""
+    query = {
+        "status": "available",
+        "model": original_gpu["model"],
+        "id": {"$ne": original_gpu["id"]}
+    }
+    
+    # Try same model first
+    replacement = await db.gpus.find_one(query, {"_id": 0})
+    
+    if not replacement:
+        # Try similar tier
+        query = {
+            "status": "available",
+            "vram": {"$gte": original_gpu["vram"]},
+            "id": {"$ne": original_gpu["id"]}
+        }
+        replacement = await db.gpus.find_one(query, {"_id": 0})
+    
+    return replacement
+
+async def execute_failover(instance_id: str, reason: str) -> dict:
+    """Execute automatic failover to a new GPU"""
+    instance = await db.instances.find_one({"id": instance_id}, {"_id": 0})
+    if not instance or instance["status"] != "running":
+        return {"success": False, "error": "Instance not found or not running"}
+    
+    original_gpu = await db.gpus.find_one({"id": instance["gpu_id"]}, {"_id": 0})
+    if not original_gpu:
+        return {"success": False, "error": "Original GPU not found"}
+    
+    # Find replacement
+    replacement = await find_replacement_gpu(original_gpu)
+    if not replacement:
+        return {"success": False, "error": "No replacement GPU available"}
+    
+    # Calculate downtime compensation (free seconds)
+    downtime_seconds = 30  # Estimated migration time
+    compensation = downtime_seconds * instance["price_per_second"]
+    
+    # Create failover record
+    failover_record = {
+        "id": str(uuid.uuid4()),
+        "instance_id": instance_id,
+        "user_id": instance["user_id"],
+        "original_gpu_id": original_gpu["id"],
+        "original_gpu_name": original_gpu["name"],
+        "new_gpu_id": replacement["id"],
+        "new_gpu_name": replacement["name"],
+        "reason": reason,
+        "compensation": compensation,
+        "downtime_seconds": downtime_seconds,
+        "status": "completed",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.failover_logs.insert_one(failover_record)
+    
+    # Update instance with new GPU
+    new_access_info = {
+        "ssh": f"ssh user@gpu-{replacement['id'][:8]}.gpucloud.pro",
+        "jupyter": f"https://jupyter-{replacement['id'][:8]}.gpucloud.pro",
+        "password": instance["access_info"]["password"]  # Keep same password
+    }
+    
+    await db.instances.update_one(
+        {"id": instance_id},
+        {"$set": {
+            "gpu_id": replacement["id"],
+            "gpu_name": replacement["name"],
+            "access_info": new_access_info,
+            "failover_count": instance.get("failover_count", 0) + 1,
+            "last_failover": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Update GPU statuses
+    await db.gpus.update_one({"id": original_gpu["id"]}, {"$set": {"status": "maintenance"}})
+    await db.gpus.update_one({"id": replacement["id"]}, {"$set": {"status": "in_use"}})
+    
+    # Add compensation to user balance
+    await db.users.update_one({"id": instance["user_id"]}, {"$inc": {"balance": compensation}})
+    
+    # Create notification
+    notification = {
+        "id": str(uuid.uuid4()),
+        "user_id": instance["user_id"],
+        "type": "failover",
+        "title": "تم نقل جلستك لكرت بديل",
+        "message": f"تم نقل جلستك من {original_gpu['name']} إلى {replacement['name']} بسبب: {reason}. تم إضافة ${compensation:.4f} كتعويض.",
+        "read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.notifications.insert_one(notification)
+    
+    return {
+        "success": True,
+        "failover_id": failover_record["id"],
+        "new_gpu": replacement["name"],
+        "compensation": compensation,
+        "new_access_info": new_access_info
+    }
+
+@api_router.get("/instances/{instance_id}/health")
+async def get_instance_health(instance_id: str, user: dict = Depends(get_current_user)):
+    """Get real-time health status of an instance"""
+    instance = await db.instances.find_one({"id": instance_id, "user_id": user["id"]}, {"_id": 0})
+    if not instance:
+        raise HTTPException(status_code=404, detail="Instance not found")
+    if instance["status"] != "running":
+        raise HTTPException(status_code=400, detail="Instance not running")
+    
+    health = await check_gpu_health(instance["gpu_id"])
+    health["instance_id"] = instance_id
+    health["gpu_name"] = instance["gpu_name"]
+    
+    return health
+
+@api_router.post("/instances/{instance_id}/failover")
+async def trigger_failover(instance_id: str, user: dict = Depends(get_current_user)):
+    """Manually trigger failover to a new GPU"""
+    instance = await db.instances.find_one({"id": instance_id, "user_id": user["id"]}, {"_id": 0})
+    if not instance:
+        raise HTTPException(status_code=404, detail="Instance not found")
+    
+    result = await execute_failover(instance_id, "طلب يدوي من المستخدم")
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["error"])
+    
+    return result
+
+@api_router.get("/notifications")
+async def get_notifications(user: dict = Depends(get_current_user)):
+    """Get user notifications"""
+    notifications = await db.notifications.find(
+        {"user_id": user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    return notifications
+
+@api_router.post("/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str, user: dict = Depends(get_current_user)):
+    """Mark notification as read"""
+    await db.notifications.update_one(
+        {"id": notification_id, "user_id": user["id"]},
+        {"$set": {"read": True}}
+    )
+    return {"success": True}
+
+@api_router.get("/failover-logs")
+async def get_failover_logs(user: dict = Depends(get_current_user)):
+    """Get user's failover history"""
+    logs = await db.failover_logs.find(
+        {"user_id": user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    return logs
+
 # ============== INSTANCE ROUTES ==============
 
 @api_router.post("/instances/start")
