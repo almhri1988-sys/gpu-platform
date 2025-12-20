@@ -426,10 +426,18 @@ class GPUCloudAPITester:
         self.test_health_check()
         self.test_seed_data()
         
+        # New 2FA and Quick Registration tests
+        self.test_password_generation()
+        self.test_quick_registration()
+        
         # Authentication tests
         self.test_user_registration()
         self.test_user_login()
         self.test_auth_me()
+        
+        # 2FA System tests
+        self.test_2fa_system()
+        self.test_2fa_login_flow()
         
         # Marketplace tests
         self.test_gpu_marketplace()
