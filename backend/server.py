@@ -338,19 +338,30 @@ SUPPORTED_COUNTRIES = {
     "NZ": {"name": "نيوزيلندا", "name_en": "New Zealand", "currency": "NZD", "payout_methods": ["bank_transfer", "paypal", "wise"]},
 }
 
-# الدول المحظورة (عقوبات دولية)
-BLOCKED_COUNTRIES = {
-    "KP": "كوريا الشمالية",
-    "IR": "إيران",
-    "SY": "سوريا",
-    "CU": "كوبا",
-    "VE": "فنزويلا",
-    "RU": "روسيا",
-    "BY": "بيلاروسيا",
-    "MM": "ميانمار",
-    "SD": "السودان",
-    "AF": "أفغانستان",
+# الدول المحظورة (فارغة - مفتوح للجميع)
+BLOCKED_COUNTRIES = {}
+
+# الدول التي كانت محظورة - الآن مدعومة بالكريبتو فقط
+CRYPTO_ONLY_COUNTRIES = {
+    "KP": {"name": "كوريا الشمالية", "name_en": "North Korea", "currency": "USD", "payout_methods": ["crypto"]},
+    "IR": {"name": "إيران", "name_en": "Iran", "currency": "USD", "payout_methods": ["crypto"]},
+    "SY": {"name": "سوريا", "name_en": "Syria", "currency": "USD", "payout_methods": ["crypto"]},
+    "CU": {"name": "كوبا", "name_en": "Cuba", "currency": "USD", "payout_methods": ["crypto"]},
+    "VE": {"name": "فنزويلا", "name_en": "Venezuela", "currency": "USD", "payout_methods": ["crypto"]},
+    "RU": {"name": "روسيا", "name_en": "Russia", "currency": "RUB", "payout_methods": ["crypto", "wise"]},
+    "BY": {"name": "بيلاروسيا", "name_en": "Belarus", "currency": "BYN", "payout_methods": ["crypto"]},
+    "MM": {"name": "ميانمار", "name_en": "Myanmar", "currency": "USD", "payout_methods": ["crypto"]},
+    "SD": {"name": "السودان", "name_en": "Sudan", "currency": "USD", "payout_methods": ["crypto"]},
+    "AF": {"name": "أفغانستان", "name_en": "Afghanistan", "currency": "USD", "payout_methods": ["crypto"]},
+    "YE": {"name": "اليمن", "name_en": "Yemen", "currency": "USD", "payout_methods": ["crypto"]},
+    "LY": {"name": "ليبيا", "name_en": "Libya", "currency": "USD", "payout_methods": ["crypto"]},
+    "SO": {"name": "الصومال", "name_en": "Somalia", "currency": "USD", "payout_methods": ["crypto"]},
+    "ER": {"name": "إريتريا", "name_en": "Eritrea", "currency": "USD", "payout_methods": ["crypto"]},
+    "ZW": {"name": "زيمبابوي", "name_en": "Zimbabwe", "currency": "USD", "payout_methods": ["crypto"]},
 }
+
+# دمج جميع الدول في قائمة واحدة
+ALL_SUPPORTED_COUNTRIES = {**SUPPORTED_COUNTRIES, **CRYPTO_ONLY_COUNTRIES}
 
 # طرق السحب المتاحة
 PAYOUT_METHODS = {
