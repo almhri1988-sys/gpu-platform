@@ -1913,6 +1913,346 @@ const BillingPage = () => {
   );
 };
 
+// ============== SECURITY PAGE - 2FA ==============
+const SecurityPage = () => {
+  const { token, user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [twoFAStatus, setTwoFAStatus] = useState({ enabled: false, method: null });
+  const [setupMode, setSetupMode] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState("both");
+  const [qrCode, setQrCode] = useState(null);
+  const [manualKey, setManualKey] = useState(null);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [disableMode, setDisableMode] = useState(false);
+  const [disableCode, setDisableCode] = useState("");
+
+  useEffect(() => {
+    fetchStatus();
+  }, []);
+
+  const fetchStatus = async () => {
+    try {
+      const res = await axios.get(`${API}/auth/2fa/status`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTwoFAStatus(res.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startSetup = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.post(`${API}/auth/2fa/setup`, 
+        { method: selectedMethod },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setQrCode(res.data.qr_code);
+      setManualKey(res.data.manual_key);
+      setSetupMode(true);
+      if (res.data.email_sent) {
+        toast.success("تم إرسال رمز التحقق إلى بريدك");
+      }
+    } catch (e) {
+      toast.error("فشل بدء الإعداد");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifySetup = async () => {
+    if (verificationCode.length !== 6) {
+      toast.error("أدخل رمز من 6 أرقام");
+      return;
+    }
+    
+    setVerifying(true);
+    try {
+      await axios.post(`${API}/auth/2fa/verify-setup`,
+        { code: verificationCode, method: selectedMethod === "email" ? "email" : "totp" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("تم تفعيل المصادقة الثنائية بنجاح! 🎉");
+      setSetupMode(false);
+      setQrCode(null);
+      setManualKey(null);
+      setVerificationCode("");
+      fetchStatus();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "رمز غير صحيح");
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const disable2FA = async () => {
+    if (disableCode.length !== 6) {
+      toast.error("أدخل رمز من 6 أرقام");
+      return;
+    }
+    
+    setVerifying(true);
+    try {
+      await axios.post(`${API}/auth/2fa/disable`,
+        { code: disableCode, method: "totp" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("تم إلغاء المصادقة الثنائية");
+      setDisableMode(false);
+      setDisableCode("");
+      fetchStatus();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "رمز غير صحيح");
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const sendEmailCode = async () => {
+    try {
+      await axios.post(`${API}/auth/2fa/send-email-code`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success("تم إرسال رمز جديد إلى بريدك");
+    } catch (e) {
+      toast.error("فشل إرسال الرمز");
+    }
+  };
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64"><div className="spinner"></div></div>;
+  }
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div>
+        <h1 className="text-2xl font-bold">الأمان</h1>
+        <p className="text-[#8B8B9E]">إدارة إعدادات الأمان وحماية حسابك</p>
+      </div>
+
+      {/* حالة 2FA الحالية */}
+      <Card className="gpu-card">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                twoFAStatus.enabled ? 'bg-[#00FF88]/10' : 'bg-[#8B8B9E]/10'
+              }`}>
+                <Shield className={`w-6 h-6 ${twoFAStatus.enabled ? 'text-[#00FF88]' : 'text-[#8B8B9E]'}`} />
+              </div>
+              <div>
+                <CardTitle>المصادقة الثنائية (2FA)</CardTitle>
+                <CardDescription>
+                  {twoFAStatus.enabled ? (
+                    <span className="text-[#00FF88]">مفعّلة - {twoFAStatus.method === 'both' ? 'تطبيق + بريد' : twoFAStatus.method === 'totp' ? 'تطبيق' : 'بريد'}</span>
+                  ) : (
+                    <span className="text-[#FFB800]">غير مفعّلة - حسابك أقل حماية</span>
+                  )}
+                </CardDescription>
+              </div>
+            </div>
+            <Badge className={twoFAStatus.enabled ? 'bg-[#00FF88]/10 text-[#00FF88]' : 'bg-[#FFB800]/10 text-[#FFB800]'}>
+              {twoFAStatus.enabled ? 'مفعّلة' : 'غير مفعّلة'}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {!setupMode && !disableMode && (
+            <>
+              <p className="text-[#8B8B9E] mb-4">
+                المصادقة الثنائية تضيف طبقة حماية إضافية لحسابك. عند تفعيلها، ستحتاج إلى رمز إضافي عند تسجيل الدخول.
+              </p>
+              
+              {!twoFAStatus.enabled ? (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-lg bg-[#0A0A0F] border border-[#1E1E2E]">
+                    <Label className="mb-3 block">اختر طريقة المصادقة</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div
+                        className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                          selectedMethod === 'totp' ? 'border-[#00D4FF] bg-[#00D4FF]/5' : 'border-[#1E1E2E] hover:border-[#00D4FF]/50'
+                        }`}
+                        onClick={() => setSelectedMethod('totp')}
+                      >
+                        <Smartphone className="w-8 h-8 text-[#00D4FF] mb-2" />
+                        <h4 className="font-medium">تطبيق المصادقة</h4>
+                        <p className="text-xs text-[#8B8B9E] mt-1">Google Authenticator أو Authy</p>
+                      </div>
+                      <div
+                        className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                          selectedMethod === 'email' ? 'border-[#00D4FF] bg-[#00D4FF]/5' : 'border-[#1E1E2E] hover:border-[#00D4FF]/50'
+                        }`}
+                        onClick={() => setSelectedMethod('email')}
+                      >
+                        <Mail className="w-8 h-8 text-[#FFB800] mb-2" />
+                        <h4 className="font-medium">البريد الإلكتروني</h4>
+                        <p className="text-xs text-[#8B8B9E] mt-1">رمز يصل لبريدك</p>
+                      </div>
+                      <div
+                        className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                          selectedMethod === 'both' ? 'border-[#00D4FF] bg-[#00D4FF]/5' : 'border-[#1E1E2E] hover:border-[#00D4FF]/50'
+                        }`}
+                        onClick={() => setSelectedMethod('both')}
+                      >
+                        <Shield className="w-8 h-8 text-[#00FF88] mb-2" />
+                        <h4 className="font-medium">كلاهما (موصى به)</h4>
+                        <p className="text-xs text-[#8B8B9E] mt-1">أقصى حماية</p>
+                      </div>
+                    </div>
+                  </div>
+                  <Button className="btn-neon" onClick={startSetup}>
+                    <Shield className="w-4 h-4 mr-2" />
+                    تفعيل المصادقة الثنائية
+                  </Button>
+                </div>
+              ) : (
+                <Button variant="destructive" onClick={() => setDisableMode(true)}>
+                  إلغاء المصادقة الثنائية
+                </Button>
+              )}
+            </>
+          )}
+
+          {/* وضع الإعداد */}
+          {setupMode && (
+            <div className="space-y-6">
+              {(selectedMethod === 'totp' || selectedMethod === 'both') && qrCode && (
+                <div className="text-center">
+                  <h3 className="font-medium mb-4">1. امسح رمز QR بتطبيق المصادقة</h3>
+                  <div className="inline-block p-4 bg-white rounded-lg mb-4">
+                    <img src={qrCode} alt="QR Code" className="w-48 h-48" />
+                  </div>
+                  {manualKey && (
+                    <div className="p-3 rounded-lg bg-[#0A0A0F] border border-[#1E1E2E]">
+                      <p className="text-xs text-[#8B8B9E] mb-1">أو أدخل الرمز يدوياً:</p>
+                      <div className="flex items-center justify-center gap-2">
+                        <code className="font-mono text-[#00D4FF]">{manualKey}</code>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            navigator.clipboard.writeText(manualKey);
+                            toast.success("تم النسخ!");
+                          }}
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {selectedMethod === 'email' && (
+                <div className="text-center">
+                  <h3 className="font-medium mb-4">تم إرسال رمز إلى بريدك</h3>
+                  <p className="text-[#8B8B9E] mb-4">{user?.email}</p>
+                  <Button variant="outline" onClick={sendEmailCode}>
+                    <Mail className="w-4 h-4 mr-2" />
+                    إرسال رمز جديد
+                  </Button>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                <h3 className="font-medium text-center">
+                  {selectedMethod === 'both' ? '2. أدخل الرمز من التطبيق' : 'أدخل الرمز'}
+                </h3>
+                <Input
+                  type="text"
+                  placeholder="000000"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="text-center text-2xl font-mono tracking-widest max-w-xs mx-auto"
+                  maxLength={6}
+                />
+              </div>
+
+              <div className="flex gap-3 justify-center">
+                <Button variant="outline" onClick={() => { setSetupMode(false); setQrCode(null); }}>
+                  إلغاء
+                </Button>
+                <Button 
+                  className="btn-neon" 
+                  onClick={verifySetup}
+                  disabled={verifying || verificationCode.length !== 6}
+                >
+                  {verifying ? "جاري التحقق..." : "تأكيد التفعيل"}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* وضع الإلغاء */}
+          {disableMode && (
+            <div className="space-y-4">
+              <div className="p-4 rounded-lg bg-[#FF4757]/10 border border-[#FF4757]/30">
+                <p className="text-[#FF4757] text-sm">
+                  تحذير: إلغاء المصادقة الثنائية سيجعل حسابك أقل أماناً
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>أدخل رمز المصادقة للتأكيد</Label>
+                <Input
+                  type="text"
+                  placeholder="000000"
+                  value={disableCode}
+                  onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="text-center text-xl font-mono tracking-widest max-w-xs"
+                  maxLength={6}
+                />
+              </div>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => { setDisableMode(false); setDisableCode(""); }}>
+                  رجوع
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  onClick={disable2FA}
+                  disabled={verifying || disableCode.length !== 6}
+                >
+                  {verifying ? "جاري..." : "تأكيد الإلغاء"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* معلومات الأمان */}
+      <Card className="gpu-card">
+        <CardHeader>
+          <CardTitle className="text-lg">نصائح أمنية</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-3 text-[#8B8B9E]">
+            <li className="flex items-start gap-2">
+              <Check className="w-5 h-5 text-[#00FF88] mt-0.5" />
+              <span>استخدم كلمة مرور قوية وفريدة لهذا الحساب</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Check className="w-5 h-5 text-[#00FF88] mt-0.5" />
+              <span>فعّل المصادقة الثنائية لحماية إضافية</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Check className="w-5 h-5 text-[#00FF88] mt-0.5" />
+              <span>لا تشارك بيانات حسابك مع أحد</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Check className="w-5 h-5 text-[#00FF88] mt-0.5" />
+              <span>راجع سجل النشاط بانتظام</span>
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 // ============== PROVIDER DASHBOARD ==============
 const ProviderLoginPage = () => {
   const [email, setEmail] = useState("");
