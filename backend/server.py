@@ -228,6 +228,12 @@ async def get_gpus(region: Optional[str] = None, model: Optional[str] = None, st
         query["status"] = status
     
     gpus = await db.gpus.find(query, {"_id": 0}).to_list(100)
+    
+    # Add performance metrics to each GPU
+    for gpu in gpus:
+        performance = get_gpu_performance(gpu["model"], gpu["vram"], gpu.get("specs", {}))
+        gpu["performance"] = performance
+    
     return gpus
 
 @api_router.get("/gpus/{gpu_id}", response_model=GPUResponse)
@@ -235,7 +241,35 @@ async def get_gpu(gpu_id: str):
     gpu = await db.gpus.find_one({"id": gpu_id}, {"_id": 0})
     if not gpu:
         raise HTTPException(status_code=404, detail="GPU not found")
+    
+    # Add performance metrics
+    gpu["performance"] = get_gpu_performance(gpu["model"], gpu["vram"], gpu.get("specs", {}))
     return gpu
+
+@api_router.get("/gpus/{gpu_id}/benchmark")
+async def get_gpu_benchmark(gpu_id: str):
+    """Get detailed GPU benchmark and health check"""
+    gpu = await db.gpus.find_one({"id": gpu_id}, {"_id": 0})
+    if not gpu:
+        raise HTTPException(status_code=404, detail="GPU not found")
+    
+    performance = get_gpu_performance(gpu["model"], gpu["vram"], gpu.get("specs", {}))
+    
+    return {
+        "gpu_id": gpu_id,
+        "name": gpu["name"],
+        "model": gpu["model"],
+        "performance": performance,
+        "comparison": {
+            "vs_average": f"+{int((performance['power_score'] - 50) / 50 * 100)}%" if performance['power_score'] > 50 else f"{int((performance['power_score'] - 50) / 50 * 100)}%",
+            "rank": "Top 20%" if performance['power_score'] > 75 else "Top 50%" if performance['power_score'] > 50 else "Standard"
+        },
+        "recommendations": {
+            "ai_training": "ممتاز" if performance['ai_score'] > 80 else "جيد" if performance['ai_score'] > 50 else "مقبول",
+            "rendering": "ممتاز" if performance['render_score'] > 80 else "جيد" if performance['render_score'] > 50 else "مقبول",
+            "gaming": "ممتاز" if gpu["model"].startswith("RTX") else "جيد"
+        }
+    }
 
 @api_router.get("/regions")
 async def get_regions():
