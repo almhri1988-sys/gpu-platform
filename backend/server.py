@@ -1913,8 +1913,8 @@ async def register_provider(data: ProviderCreate):
 @api_router.post("/provider/login")
 async def login_provider(user: UserLogin):
     provider = await db.providers.find_one({"email": user.email}, {"_id": 0})
-    if not provider or provider["password"] != hash_password(user.password):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+    if not provider or not verify_password_secure(user.password, provider["password"]):
+        raise HTTPException(status_code=401, detail="بيانات الدخول غير صحيحة")
     
     token = create_token(provider["id"], "provider")
     return {"token": token, "provider": {k: v for k, v in provider.items() if k != "password"}}
