@@ -1,108 +1,174 @@
 {
-  "timestamp": "2025-12-20T13:27:52.625526",
+  "timestamp": "2025-12-20T15:18:46.225486",
   "base_url": "https://gpucloud.preview.emergentagent.com",
   "summary": {
-    "tests_run": 15,
-    "tests_passed": 14,
+    "tests_run": 26,
+    "tests_passed": 25,
     "tests_failed": 1,
-    "success_rate": 93.3
+    "success_rate": 96.2
   },
   "test_results": [
     {
       "test_name": "API Root Endpoint",
       "status": "PASSED",
       "details": "",
-      "timestamp": "2025-12-20T13:27:51.441359"
+      "timestamp": "2025-12-20T15:18:43.567033"
     },
     {
       "test_name": "Health Check Endpoint",
       "status": "PASSED",
       "details": "",
-      "timestamp": "2025-12-20T13:27:51.478892"
+      "timestamp": "2025-12-20T15:18:43.601443"
     },
     {
       "test_name": "Seed Data",
       "status": "PASSED",
       "details": "",
-      "timestamp": "2025-12-20T13:27:51.526791"
+      "timestamp": "2025-12-20T15:18:43.636972"
+    },
+    {
+      "test_name": "Generate Strong Password",
+      "status": "PASSED",
+      "details": "Generated password: Clou...",
+      "timestamp": "2025-12-20T15:18:43.669321"
+    },
+    {
+      "test_name": "Quick User Registration",
+      "status": "PASSED",
+      "details": "Created user with generated password: Ultr...",
+      "timestamp": "2025-12-20T15:18:43.928568"
+    },
+    {
+      "test_name": "Quick Provider Registration",
+      "status": "PASSED",
+      "details": "Created provider with generated password: Data...",
+      "timestamp": "2025-12-20T15:18:44.192680"
     },
     {
       "test_name": "User Registration",
       "status": "PASSED",
       "details": "",
-      "timestamp": "2025-12-20T13:27:51.570622"
+      "timestamp": "2025-12-20T15:18:44.456946"
     },
     {
       "test_name": "User Login",
       "status": "PASSED",
       "details": "",
-      "timestamp": "2025-12-20T13:27:51.607681"
+      "timestamp": "2025-12-20T15:18:44.492475"
     },
     {
       "test_name": "Get Current User",
       "status": "PASSED",
       "details": "",
-      "timestamp": "2025-12-20T13:27:51.646602"
+      "timestamp": "2025-12-20T15:18:44.531088"
+    },
+    {
+      "test_name": "2FA Status Check (Initial)",
+      "status": "PASSED",
+      "details": "2FA enabled: False",
+      "timestamp": "2025-12-20T15:18:44.562023"
+    },
+    {
+      "test_name": "2FA Setup (TOTP)",
+      "status": "PASSED",
+      "details": "QR code and manual key generated",
+      "timestamp": "2025-12-20T15:18:44.612826"
+    },
+    {
+      "test_name": "2FA Verify Setup (TOTP)",
+      "status": "PASSED",
+      "details": "Endpoint responded (expected failure with mock code): \u0631\u0645\u0632 \u063a\u064a\u0631 \u0635\u062d\u064a\u062d",
+      "timestamp": "2025-12-20T15:18:44.642493"
+    },
+    {
+      "test_name": "2FA Setup (Email)",
+      "status": "PASSED",
+      "details": "Email verification code sent",
+      "timestamp": "2025-12-20T15:18:44.687654"
+    },
+    {
+      "test_name": "2FA Verify Setup (Email)",
+      "status": "PASSED",
+      "details": "Endpoint responded (expected failure with mock code): \u0631\u0645\u0632 \u063a\u064a\u0631 \u0635\u062d\u064a\u062d",
+      "timestamp": "2025-12-20T15:18:44.722982"
+    },
+    {
+      "test_name": "2FA Send Email Code",
+      "status": "PASSED",
+      "details": "Email code sent successfully",
+      "timestamp": "2025-12-20T15:18:44.759089"
+    },
+    {
+      "test_name": "Login Flow Check",
+      "status": "PASSED",
+      "details": "Login response: Direct login",
+      "timestamp": "2025-12-20T15:18:45.019125"
+    },
+    {
+      "test_name": "2FA Login Endpoint",
+      "status": "PASSED",
+      "details": "2FA login endpoint responded: Success",
+      "timestamp": "2025-12-20T15:18:45.274388"
     },
     {
       "test_name": "Get All GPUs",
       "status": "PASSED",
-      "details": "Found 10 GPUs",
-      "timestamp": "2025-12-20T13:27:51.683167"
+      "details": "Found 8 GPUs",
+      "timestamp": "2025-12-20T15:18:45.313094"
     },
     {
       "test_name": "Get GPUs by Region",
       "status": "PASSED",
-      "details": "Found 2 GPUs in US East",
-      "timestamp": "2025-12-20T13:27:51.717584"
+      "details": "Found 1 GPUs in US East",
+      "timestamp": "2025-12-20T15:18:45.343986"
     },
     {
       "test_name": "Get GPUs by Model",
       "status": "PASSED",
-      "details": "Found 2 RTX 4090 GPUs",
-      "timestamp": "2025-12-20T13:27:51.751397"
+      "details": "Found 0 RTX 4090 GPUs",
+      "timestamp": "2025-12-20T15:18:45.379196"
     },
     {
       "test_name": "Get Regions",
       "status": "PASSED",
       "details": "Found 5 regions",
-      "timestamp": "2025-12-20T13:27:51.793049"
+      "timestamp": "2025-12-20T15:18:45.417148"
     },
     {
-      "test_name": "Start Instance",
+      "test_name": "Instance Management",
       "status": "FAILED",
-      "details": "Insufficient balance: $0.00 < $0.89",
-      "timestamp": "2025-12-20T13:27:51.826141"
+      "details": "No GPU available for testing",
+      "timestamp": "2025-12-20T15:18:45.417163"
     },
     {
       "test_name": "Get All Instances",
       "status": "PASSED",
-      "details": "Found 0 total instances",
-      "timestamp": "2025-12-20T13:27:51.864304"
+      "details": "Found 3 total instances",
+      "timestamp": "2025-12-20T15:18:45.449298"
     },
     {
       "test_name": "Get Transactions",
       "status": "PASSED",
-      "details": "Found 0 transactions",
-      "timestamp": "2025-12-20T13:27:51.901640"
+      "details": "Found 2 transactions",
+      "timestamp": "2025-12-20T15:18:45.481232"
     },
     {
       "test_name": "Get Invoices",
       "status": "PASSED",
-      "details": "Found 0 invoices",
-      "timestamp": "2025-12-20T13:27:51.938391"
+      "details": "Found 2 invoices",
+      "timestamp": "2025-12-20T15:18:45.515667"
     },
     {
       "test_name": "Create Payment Checkout",
       "status": "PASSED",
       "details": "Checkout URL created",
-      "timestamp": "2025-12-20T13:27:52.625495"
+      "timestamp": "2025-12-20T15:18:46.225455"
     }
   ],
   "failed_tests": [
     {
-      "test": "Start Instance",
-      "error": "Insufficient balance: $0.00 < $0.89",
+      "test": "Instance Management",
+      "error": "No GPU available for testing",
       "response": null
     }
   ]
