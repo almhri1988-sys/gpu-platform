@@ -1073,6 +1073,190 @@ async def create_checkout(request: Request, data: AddFundsRequest, user: dict = 
     
     return {"url": session.url, "session_id": session.session_id}
 
+# ============== COUNTRIES & KYC ROUTES ==============
+
+@api_router.get("/countries/supported")
+async def get_supported_countries():
+    """Get list of supported countries for providers"""
+    return {
+        "supported": [
+            {"code": code, **info} 
+            for code, info in SUPPORTED_COUNTRIES.items()
+        ],
+        "blocked": [
+            {"code": code, "name": name} 
+            for code, name in BLOCKED_COUNTRIES.items()
+        ],
+        "total_supported": len(SUPPORTED_COUNTRIES)
+    }
+
+@api_router.get("/countries/{country_code}")
+async def get_country_details(country_code: str):
+    """Get details for a specific country"""
+    country_code = country_code.upper()
+    
+    if country_code in BLOCKED_COUNTRIES:
+        raise HTTPException(status_code=403, detail=f"هذه الدولة محظورة: {BLOCKED_COUNTRIES[country_code]}")
+    
+    if country_code not in SUPPORTED_COUNTRIES:
+        raise HTTPException(status_code=404, detail="الدولة غير مدعومة حالياً")
+    
+    country = SUPPORTED_COUNTRIES[country_code]
+    payout_details = [
+        {"method": m, **PAYOUT_METHODS[m]} 
+        for m in country["payout_methods"] 
+        if m in PAYOUT_METHODS
+    ]
+    
+    return {
+        "code": country_code,
+        **country,
+        "payout_methods_details": payout_details
+    }
+
+@api_router.get("/payout-methods")
+async def get_all_payout_methods():
+    """Get all available payout methods"""
+    return PAYOUT_METHODS
+
+@api_router.post("/provider/kyc/submit")
+async def submit_kyc(data: ProviderKYC, authorization: str = Header(None)):
+    """Submit KYC documents for verification"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = authorization.split(" ")[1]
+    payload = verify_token(token)
+    
+    # Check if country is supported
+    country_code = data.country.upper()
+    if country_code in BLOCKED_COUNTRIES:
+        raise HTTPException(status_code=403, detail=f"هذه الدولة محظورة: {BLOCKED_COUNTRIES[country_code]}")
+    if country_code not in SUPPORTED_COUNTRIES:
+        raise HTTPException(status_code=400, detail="الدولة غير مدعومة")
+    
+    # Create KYC record
+    kyc_record = {
+        "id": str(uuid.uuid4()),
+        "provider_id": payload["user_id"],
+        "full_name": data.full_name,
+        "country": country_code,
+        "id_type": data.id_type,
+        "id_number": data.id_number,
+        "id_document_url": data.id_document_url,
+        "address": data.address,
+        "phone": data.phone,
+        "tax_id": data.tax_id,
+        "status": "pending",  # pending, approved, rejected
+        "submitted_at": datetime.now(timezone.utc).isoformat(),
+        "reviewed_at": None,
+        "reviewer_notes": None
+    }
+    await db.kyc_submissions.insert_one(kyc_record)
+    
+    # Update provider with basic KYC level
+    await db.providers.update_one(
+        {"id": payload["user_id"]},
+        {"$set": {
+            "country": country_code,
+            "kyc_status": "pending",
+            "kyc_level": "basic",
+            "kyc_submission_id": kyc_record["id"]
+        }}
+    )
+    
+    return {
+        "message": "تم تقديم طلب التحقق بنجاح",
+        "kyc_id": kyc_record["id"],
+        "status": "pending",
+        "estimated_review": "24-48 ساعة"
+    }
+
+@api_router.get("/provider/kyc/status")
+async def get_kyc_status(authorization: str = Header(None)):
+    """Get KYC verification status"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = authorization.split(" ")[1]
+    payload = verify_token(token)
+    
+    provider = await db.providers.find_one({"id": payload["user_id"]}, {"_id": 0})
+    if not provider:
+        raise HTTPException(status_code=404, detail="Provider not found")
+    
+    kyc_level = provider.get("kyc_level", "none")
+    kyc_info = KYC_LEVELS.get(kyc_level, KYC_LEVELS["none"])
+    
+    # Get latest KYC submission
+    submission = await db.kyc_submissions.find_one(
+        {"provider_id": payload["user_id"]},
+        {"_id": 0}
+    )
+    
+    country_code = provider.get("country", "")
+    country_info = SUPPORTED_COUNTRIES.get(country_code, {})
+    
+    return {
+        "kyc_level": kyc_level,
+        "kyc_label": kyc_info["label"],
+        "max_payout": kyc_info["max_payout"],
+        "status": provider.get("kyc_status", "none"),
+        "country": country_code,
+        "country_info": country_info,
+        "submission": submission,
+        "available_payout_methods": [
+            {"method": m, **PAYOUT_METHODS.get(m, {})} 
+            for m in country_info.get("payout_methods", [])
+        ]
+    }
+
+@api_router.post("/admin/kyc/{kyc_id}/approve")
+async def approve_kyc(kyc_id: str, authorization: str = Header(None)):
+    """Admin: Approve KYC submission"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = authorization.split(" ")[1]
+    payload = verify_token(token)
+    
+    user = await db.users.find_one({"id": payload["user_id"]})
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    submission = await db.kyc_submissions.find_one({"id": kyc_id})
+    if not submission:
+        raise HTTPException(status_code=404, detail="KYC submission not found")
+    
+    # Update submission
+    await db.kyc_submissions.update_one(
+        {"id": kyc_id},
+        {"$set": {
+            "status": "approved",
+            "reviewed_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Update provider KYC level
+    await db.providers.update_one(
+        {"id": submission["provider_id"]},
+        {"$set": {
+            "kyc_status": "approved",
+            "kyc_level": "verified"
+        }}
+    )
+    
+    # Notify provider
+    notification = {
+        "id": str(uuid.uuid4()),
+        "user_id": submission["provider_id"],
+        "type": "kyc_approved",
+        "title": "✅ تم التحقق من هويتك",
+        "message": "تهانينا! تم التحقق من هويتك بنجاح. يمكنك الآن سحب أرباحك.",
+        "read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.notifications.insert_one(notification)
+    
+    return {"message": "KYC approved", "provider_id": submission["provider_id"]}
+
 @api_router.get("/payments/status/{session_id}")
 async def get_payment_status(session_id: str, user: dict = Depends(get_current_user)):
     webhook_url = "https://gpucloud.pro/api/webhook/stripe"
