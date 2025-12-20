@@ -429,6 +429,10 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [twoFactorMethod, setTwoFactorMethod] = useState("totp");
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -436,15 +440,133 @@ const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(email, password);
-      toast.success("تم تسجيل الدخول بنجاح");
-      navigate("/dashboard");
+      const result = await login(email, password);
+      if (result?.requires_2fa) {
+        setRequires2FA(true);
+        setTwoFactorMethod(result.two_factor_method || "totp");
+        toast.info("مطلوب رمز المصادقة الثنائية");
+      } else {
+        toast.success("تم تسجيل الدخول بنجاح");
+        navigate("/dashboard");
+      }
     } catch (err) {
       toast.error(err.response?.data?.detail || "فشل تسجيل الدخول");
     } finally {
       setLoading(false);
     }
   };
+
+  const handle2FASubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await axios.post(`${API}/auth/login/2fa`, {
+        email,
+        password,
+        two_factor_code: twoFactorCode,
+        two_factor_method: twoFactorMethod
+      });
+      
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      toast.success("تم تسجيل الدخول بنجاح");
+      navigate("/dashboard");
+      window.location.reload();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "رمز غير صحيح");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const requestEmailCode = async () => {
+    try {
+      // نحتاج تسجيل دخول مؤقت لإرسال الكود
+      await axios.post(`${API}/auth/login`, { email, password });
+    } catch (err) {
+      if (err.response?.data?.requires_2fa) {
+        toast.info("سيتم إرسال رمز إلى بريدك");
+      }
+    }
+  };
+
+  // عرض نموذج 2FA
+  if (requires2FA) {
+    return (
+      <div className="min-h-screen gradient-mesh flex items-center justify-center px-4">
+        <Card className="w-full max-w-md gpu-card">
+          <CardHeader className="text-center">
+            <div className="w-16 h-16 rounded-full bg-[#00D4FF]/20 flex items-center justify-center mx-auto mb-4">
+              <Shield className="w-8 h-8 text-[#00D4FF]" />
+            </div>
+            <CardTitle className="text-2xl">المصادقة الثنائية</CardTitle>
+            <CardDescription>أدخل رمز التحقق</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handle2FASubmit} className="space-y-4">
+              {twoFactorMethod === "both" && (
+                <Tabs defaultValue="totp" onValueChange={setTwoFactorMethod}>
+                  <TabsList className="w-full">
+                    <TabsTrigger value="totp" className="flex-1">
+                      <Smartphone className="w-4 h-4 mr-2" />
+                      تطبيق
+                    </TabsTrigger>
+                    <TabsTrigger value="email" className="flex-1">
+                      <Mail className="w-4 h-4 mr-2" />
+                      بريد
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              )}
+
+              <div className="space-y-2">
+                <Label>
+                  {twoFactorMethod === "email" ? "رمز البريد الإلكتروني" : "رمز التطبيق"}
+                </Label>
+                <Input
+                  type="text"
+                  placeholder="000000"
+                  value={twoFactorCode}
+                  onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  className="text-center text-2xl font-mono tracking-widest"
+                  maxLength={6}
+                  autoFocus
+                />
+              </div>
+
+              {twoFactorMethod === "email" && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={requestEmailCode}
+                >
+                  <Mail className="w-4 h-4 mr-2" />
+                  إرسال رمز جديد
+                </Button>
+              )}
+
+              <Button type="submit" className="w-full btn-neon" disabled={loading || twoFactorCode.length !== 6}>
+                {loading ? "جاري التحقق..." : "تأكيد"}
+              </Button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                onClick={() => {
+                  setRequires2FA(false);
+                  setTwoFactorCode("");
+                }}
+              >
+                رجوع
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen gradient-mesh flex items-center justify-center px-4">
@@ -474,15 +596,27 @@ const LoginPage = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">كلمة المرور</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                data-testid="login-password-input"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  data-testid="login-password-input"
+                  className="pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </Button>
+              </div>
             </div>
             <Button type="submit" className="w-full btn-neon" disabled={loading} data-testid="login-submit-btn">
               {loading ? "جاري التحميل..." : "تسجيل الدخول"}
