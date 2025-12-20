@@ -657,6 +657,13 @@ async def root():
 async def health():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
+# Demo endpoint to add test balance
+@api_router.post("/demo/add-balance")
+async def add_demo_balance(user: dict = Depends(get_current_user)):
+    await db.users.update_one({"id": user["id"]}, {"$inc": {"balance": 100.0}})
+    updated_user = await db.users.find_one({"id": user["id"]}, {"_id": 0})
+    return {"message": "Added $100 demo balance", "new_balance": updated_user["balance"]}
+
 # Include router
 app.include_router(api_router)
 
