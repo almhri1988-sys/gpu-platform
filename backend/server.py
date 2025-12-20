@@ -109,6 +109,46 @@ class GPUCreate(BaseModel):
     region: str
     specs: Dict = {}
 
+# GPU Performance Classification
+GPU_BENCHMARKS = {
+    "H100": {"power_score": 100, "tier": "ultra", "ai_score": 100, "render_score": 95, "best_for": ["AI Training", "LLM Fine-tuning", "Scientific Computing"]},
+    "A100": {"power_score": 85, "tier": "premium", "ai_score": 90, "render_score": 80, "best_for": ["AI Training", "Deep Learning", "Data Analytics"]},
+    "L40S": {"power_score": 75, "tier": "premium", "ai_score": 80, "render_score": 85, "best_for": ["AI Inference", "3D Rendering", "Video Encoding"]},
+    "A6000": {"power_score": 70, "tier": "professional", "ai_score": 75, "render_score": 90, "best_for": ["3D Rendering", "CAD", "Video Production"]},
+    "RTX 4090": {"power_score": 80, "tier": "high", "ai_score": 70, "render_score": 95, "best_for": ["Gaming", "3D Rendering", "AI Inference"]},
+    "RTX 4080": {"power_score": 65, "tier": "high", "ai_score": 55, "render_score": 85, "best_for": ["Gaming", "3D Rendering", "Content Creation"]},
+    "RTX 3090": {"power_score": 55, "tier": "mid", "ai_score": 50, "render_score": 75, "best_for": ["Gaming", "3D Rendering", "AI Inference"]},
+}
+
+def get_gpu_performance(model: str, vram: int, specs: dict) -> dict:
+    """Calculate GPU performance metrics"""
+    benchmark = GPU_BENCHMARKS.get(model, {
+        "power_score": 40, "tier": "entry", "ai_score": 30, "render_score": 50, 
+        "best_for": ["General Computing"]
+    })
+    
+    # Adjust score based on VRAM
+    vram_bonus = min(vram / 80 * 10, 10)  # Max 10 points for 80GB
+    
+    # Calculate health indicators (simulated)
+    import random
+    random.seed(hash(model + str(vram)))
+    
+    return {
+        "power_score": min(100, benchmark["power_score"] + vram_bonus),
+        "tier": benchmark["tier"],
+        "tier_label": {"ultra": "فائق القوة", "premium": "احترافي", "professional": "متقدم", "high": "عالي", "mid": "متوسط", "entry": "مبتدئ"}.get(benchmark["tier"], "عادي"),
+        "ai_score": benchmark["ai_score"],
+        "render_score": benchmark["render_score"],
+        "best_for": benchmark["best_for"],
+        "health": {
+            "temperature": random.randint(35, 55),
+            "memory_health": random.randint(95, 100),
+            "gpu_utilization": random.randint(0, 15),
+            "status": "excellent" if random.random() > 0.1 else "good"
+        }
+    }
+
 # ============== HELPERS ==============
 
 def hash_password(password: str) -> str:
