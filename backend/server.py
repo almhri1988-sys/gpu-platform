@@ -266,6 +266,9 @@ async def lifespan(app: FastAPI):
 
 # Create the main app with lifespan
 app = FastAPI(title="GPU Cloud Pro API", lifespan=lifespan)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 api_router = APIRouter(prefix="/api")
 
 # ============== MODELS ==============
