@@ -598,6 +598,53 @@ async def get_current_user(authorization: str = Header(None)):
 
 # ============== AUTH ROUTES ==============
 
+# === نظام توليد كلمة مرور تلقائية ===
+@api_router.get("/auth/generate-password")
+async def get_suggested_password():
+    """توليد كلمة مرور قوية مقترحة"""
+    password = generate_strong_password()
+    return {"password": password}
+
+# === نظام التسجيل المبسط ===
+class QuickRegister(BaseModel):
+    email: EmailStr
+    name: str = ""
+    password: Optional[str] = None  # اختياري - سيتم توليده تلقائياً
+
+@api_router.post("/auth/quick-register")
+async def quick_register(data: QuickRegister):
+    """تسجيل سريع وسهل - كلمة المرور اختيارية"""
+    existing = await db.users.find_one({"email": data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="البريد مسجل مسبقاً")
+    
+    # توليد كلمة مرور تلقائية إذا لم يتم تقديمها
+    password = data.password if data.password else generate_strong_password()
+    name = data.name if data.name else data.email.split("@")[0]
+    
+    user_doc = {
+        "id": str(uuid.uuid4()),
+        "email": data.email,
+        "password": hash_password_secure(password),
+        "name": name,
+        "balance": 0.0,
+        "role": "user",
+        "two_factor_enabled": False,
+        "two_factor_secret": None,
+        "two_factor_method": None,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.users.insert_one(user_doc)
+    await log_security_event("user_registered", user_doc["id"], {"email": data.email, "quick": True})
+    
+    token = create_token(user_doc["id"], "user")
+    return {
+        "token": token,
+        "user": {k: v for k, v in user_doc.items() if k not in ["password", "_id", "two_factor_secret"]},
+        "generated_password": password if not data.password else None,
+        "message": "تم إنشاء حسابك بنجاح!" + (" احفظ كلمة المرور المُقترحة." if not data.password else "")
+    }
+
 @api_router.post("/auth/register")
 async def register(user: UserCreate):
     existing = await db.users.find_one({"email": user.email})
@@ -612,6 +659,9 @@ async def register(user: UserCreate):
         "name": user.name,
         "balance": 0.0,
         "role": "user",
+        "two_factor_enabled": False,
+        "two_factor_secret": None,
+        "two_factor_method": None,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(user_doc)
@@ -620,7 +670,150 @@ async def register(user: UserCreate):
     await log_security_event("user_registered", user_doc["id"], {"email": user.email})
     
     token = create_token(user_doc["id"], "user")
-    return {"token": token, "user": {k: v for k, v in user_doc.items() if k not in ["password", "_id"]}}
+    return {"token": token, "user": {k: v for k, v in user_doc.items() if k not in ["password", "_id", "two_factor_secret"]}}
+
+# === نظام المصادقة الثنائية (2FA) ===
+
+class Enable2FARequest(BaseModel):
+    method: str  # "totp" أو "email" أو "both"
+
+class Verify2FARequest(BaseModel):
+    code: str
+    method: str = "totp"  # "totp" أو "email"
+
+class Login2FARequest(BaseModel):
+    email: EmailStr
+    password: str
+    two_factor_code: Optional[str] = None
+    two_factor_method: Optional[str] = None
+
+@api_router.post("/auth/2fa/setup")
+async def setup_two_factor(request: Enable2FARequest, user: dict = Depends(get_current_user)):
+    """تفعيل المصادقة الثنائية"""
+    secret = generate_totp_secret()
+    qr_code = generate_totp_qrcode(secret, user["email"])
+    
+    # حفظ السر مؤقتاً حتى يتم التحقق
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {
+            "two_factor_secret_pending": secret,
+            "two_factor_method_pending": request.method
+        }}
+    )
+    
+    response = {
+        "method": request.method,
+        "message": "قم بمسح رمز QR أو أدخل الرمز يدوياً"
+    }
+    
+    if request.method in ["totp", "both"]:
+        response["qr_code"] = f"data:image/png;base64,{qr_code}"
+        response["manual_key"] = secret
+    
+    if request.method in ["email", "both"]:
+        code = generate_email_code()
+        await db.users.update_one(
+            {"id": user["id"]},
+            {"$set": {"email_verification_code": code, "email_code_expires": (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat()}}
+        )
+        await send_verification_email(user["email"], code)
+        response["email_sent"] = True
+    
+    return response
+
+@api_router.post("/auth/2fa/verify-setup")
+async def verify_two_factor_setup(request: Verify2FARequest, user: dict = Depends(get_current_user)):
+    """تأكيد تفعيل المصادقة الثنائية"""
+    db_user = await db.users.find_one({"id": user["id"]}, {"_id": 0})
+    
+    secret = db_user.get("two_factor_secret_pending")
+    method = db_user.get("two_factor_method_pending", "totp")
+    
+    if not secret:
+        raise HTTPException(status_code=400, detail="لم يتم بدء إعداد 2FA")
+    
+    # التحقق من الرمز
+    verified = False
+    if request.method == "totp":
+        verified = verify_totp_code(secret, request.code)
+    elif request.method == "email":
+        email_code = db_user.get("email_verification_code")
+        expires = db_user.get("email_code_expires")
+        if email_code == request.code and expires and datetime.fromisoformat(expires) > datetime.now(timezone.utc):
+            verified = True
+    
+    if not verified:
+        raise HTTPException(status_code=400, detail="رمز غير صحيح")
+    
+    # تفعيل 2FA
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {
+            "two_factor_enabled": True,
+            "two_factor_secret": secret,
+            "two_factor_method": method,
+        },
+        "$unset": {
+            "two_factor_secret_pending": "",
+            "two_factor_method_pending": "",
+            "email_verification_code": "",
+            "email_code_expires": ""
+        }}
+    )
+    
+    await log_security_event("2fa_enabled", user["id"], {"method": method})
+    
+    return {"success": True, "message": "تم تفعيل المصادقة الثنائية بنجاح!"}
+
+@api_router.post("/auth/2fa/disable")
+async def disable_two_factor(request: Verify2FARequest, user: dict = Depends(get_current_user)):
+    """إلغاء المصادقة الثنائية"""
+    db_user = await db.users.find_one({"id": user["id"]}, {"_id": 0})
+    
+    if not db_user.get("two_factor_enabled"):
+        raise HTTPException(status_code=400, detail="المصادقة الثنائية غير مفعلة")
+    
+    # التحقق من الرمز أولاً
+    secret = db_user.get("two_factor_secret")
+    if not verify_totp_code(secret, request.code):
+        raise HTTPException(status_code=400, detail="رمز غير صحيح")
+    
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {
+            "two_factor_enabled": False,
+            "two_factor_secret": None,
+            "two_factor_method": None
+        }}
+    )
+    
+    await log_security_event("2fa_disabled", user["id"], {})
+    
+    return {"success": True, "message": "تم إلغاء المصادقة الثنائية"}
+
+@api_router.post("/auth/2fa/send-email-code")
+async def send_email_verification_code(user: dict = Depends(get_current_user)):
+    """إرسال رمز تحقق عبر البريد"""
+    code = generate_email_code()
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {
+            "email_verification_code": code,
+            "email_code_expires": (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat()
+        }}
+    )
+    await send_verification_email(user["email"], code)
+    return {"success": True, "message": "تم إرسال الرمز إلى بريدك"}
+
+@api_router.get("/auth/2fa/status")
+async def get_two_factor_status(user: dict = Depends(get_current_user)):
+    """حالة المصادقة الثنائية"""
+    db_user = await db.users.find_one({"id": user["id"]}, {"_id": 0})
+    return {
+        "enabled": db_user.get("two_factor_enabled", False),
+        "method": db_user.get("two_factor_method")
+    }
 
 @api_router.post("/auth/login")
 @limiter.limit("5/minute")  # حماية من Brute Force
@@ -638,11 +831,66 @@ async def login(request: Request, user: UserLogin):
         await log_security_event("login_failed", db_user["id"] if db_user else "", {"email": user.email}, client_ip)
         raise HTTPException(status_code=401, detail="بيانات الدخول غير صحيحة")
     
+    # التحقق من 2FA
+    if db_user.get("two_factor_enabled"):
+        return {
+            "requires_2fa": True,
+            "two_factor_method": db_user.get("two_factor_method", "totp"),
+            "message": "مطلوب رمز المصادقة الثنائية"
+        }
+    
     # تسجيل دخول ناجح
     await log_security_event("login_success", db_user["id"], {"email": user.email}, client_ip)
     
     token = create_token(db_user["id"], db_user["role"])
-    return {"token": token, "user": {k: v for k, v in db_user.items() if k != "password"}}
+    return {"token": token, "user": {k: v for k, v in db_user.items() if k not in ["password", "two_factor_secret"]}}
+
+@api_router.post("/auth/login/2fa")
+@limiter.limit("5/minute")
+async def login_with_2fa(request: Request, data: Login2FARequest):
+    """تسجيل الدخول مع المصادقة الثنائية"""
+    client_ip = get_remote_address(request)
+    
+    if await check_brute_force(client_ip):
+        raise HTTPException(status_code=429, detail="تم حظرك مؤقتاً. حاول بعد ساعة.")
+    
+    db_user = await db.users.find_one({"email": data.email}, {"_id": 0})
+    if not db_user or not verify_password_secure(data.password, db_user["password"]):
+        await log_security_event("login_failed", db_user["id"] if db_user else "", {"email": data.email}, client_ip)
+        raise HTTPException(status_code=401, detail="بيانات الدخول غير صحيحة")
+    
+    if not db_user.get("two_factor_enabled"):
+        # المستخدم لم يفعل 2FA - سجل دخول عادي
+        token = create_token(db_user["id"], db_user["role"])
+        return {"token": token, "user": {k: v for k, v in db_user.items() if k not in ["password", "two_factor_secret"]}}
+    
+    if not data.two_factor_code:
+        return {"requires_2fa": True, "two_factor_method": db_user.get("two_factor_method", "totp")}
+    
+    # التحقق من رمز 2FA
+    method = data.two_factor_method or db_user.get("two_factor_method", "totp")
+    verified = False
+    
+    if method == "totp" or method == "both":
+        secret = db_user.get("two_factor_secret")
+        if secret and verify_totp_code(secret, data.two_factor_code):
+            verified = True
+    
+    if method == "email" or (method == "both" and not verified):
+        email_code = db_user.get("email_verification_code")
+        expires = db_user.get("email_code_expires")
+        if email_code == data.two_factor_code:
+            if expires and datetime.fromisoformat(expires) > datetime.now(timezone.utc):
+                verified = True
+    
+    if not verified:
+        await log_security_event("2fa_failed", db_user["id"], {"method": method}, client_ip)
+        raise HTTPException(status_code=401, detail="رمز المصادقة غير صحيح")
+    
+    await log_security_event("login_success_2fa", db_user["id"], {"email": data.email, "method": method}, client_ip)
+    
+    token = create_token(db_user["id"], db_user["role"])
+    return {"token": token, "user": {k: v for k, v in db_user.items() if k not in ["password", "two_factor_secret"]}}
 
 @api_router.get("/auth/me", response_model=UserResponse)
 async def get_me(user: dict = Depends(get_current_user)):
