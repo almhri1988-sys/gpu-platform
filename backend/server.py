@@ -554,24 +554,42 @@ async def register(user: UserCreate):
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
     
+    # تشفير آمن لكلمة المرور
     user_doc = {
         "id": str(uuid.uuid4()),
         "email": user.email,
-        "password": hash_password(user.password),
+        "password": hash_password_secure(user.password),
         "name": user.name,
         "balance": 0.0,
         "role": "user",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(user_doc)
+    
+    # تسجيل الحدث الأمني
+    await log_security_event("user_registered", user_doc["id"], {"email": user.email})
+    
     token = create_token(user_doc["id"], "user")
     return {"token": token, "user": {k: v for k, v in user_doc.items() if k not in ["password", "_id"]}}
 
 @api_router.post("/auth/login")
-async def login(user: UserLogin):
+@limiter.limit("5/minute")  # حماية من Brute Force
+async def login(request: Request, user: UserLogin):
+    client_ip = get_remote_address(request)
+    
+    # فحص الحظر
+    if await check_brute_force(client_ip):
+        await log_security_event("login_blocked", "", {"email": user.email, "reason": "too_many_attempts"}, client_ip)
+        raise HTTPException(status_code=429, detail="تم حظرك مؤقتاً. حاول بعد ساعة.")
+    
     db_user = await db.users.find_one({"email": user.email}, {"_id": 0})
-    if not db_user or db_user["password"] != hash_password(user.password):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+    if not db_user or not verify_password_secure(user.password, db_user["password"]):
+        # تسجيل محاولة فاشلة
+        await log_security_event("login_failed", db_user["id"] if db_user else "", {"email": user.email}, client_ip)
+        raise HTTPException(status_code=401, detail="بيانات الدخول غير صحيحة")
+    
+    # تسجيل دخول ناجح
+    await log_security_event("login_success", db_user["id"], {"email": user.email}, client_ip)
     
     token = create_token(db_user["id"], db_user["role"])
     return {"token": token, "user": {k: v for k, v in db_user.items() if k != "password"}}
