@@ -6,7 +6,8 @@ import {
   Cpu, Wallet, Activity, Clock, Server, Globe, Zap, 
   LogOut, Menu, X, ChevronRight, Play, Square, 
   DollarSign, BarChart3, Settings, Users, Home,
-  Plus, RefreshCw, CreditCard, FileText, AlertCircle, Bell
+  Plus, RefreshCw, CreditCard, FileText, AlertCircle, Bell,
+  Shield, Mail, Smartphone, Copy, Check, Eye, EyeOff, Sparkles
 } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./components/ui/card";
