@@ -55,7 +55,7 @@ class UserResponse(BaseModel):
     created_at: str
 
 class GPUResponse(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="allow")
     id: str
     name: str
     model: str
@@ -67,6 +67,7 @@ class GPUResponse(BaseModel):
     status: str
     provider_id: str
     specs: Dict
+    performance: Optional[Dict] = None
 
 class InstanceCreate(BaseModel):
     gpu_id: str
