@@ -1362,11 +1362,9 @@ async def stripe_webhook(request: Request):
 
 @api_router.post("/provider/register")
 async def register_provider(data: ProviderCreate):
-    # Check if country is blocked
-    if data.country:
-        country_code = data.country.upper()
-        if country_code in BLOCKED_COUNTRIES:
-            raise HTTPException(status_code=403, detail=f"عذراً، هذه الدولة غير مدعومة: {BLOCKED_COUNTRIES[country_code]}")
+    # جميع الدول مرحب بها!
+    country_code = data.country.upper() if data.country else ""
+    crypto_only = country_code in CRYPTO_ONLY_COUNTRIES if country_code else False
     
     existing = await db.providers.find_one({"email": data.email})
     if existing:
@@ -1378,7 +1376,8 @@ async def register_provider(data: ProviderCreate):
         "email": data.email,
         "password": hash_password(data.password),
         "role": "provider",
-        "country": data.country.upper() if data.country else "",
+        "country": country_code,
+        "crypto_only": crypto_only,
         "earnings": 0.0,
         "pending_payout": 0.0,
         "kyc_status": "none",
@@ -1387,7 +1386,16 @@ async def register_provider(data: ProviderCreate):
     }
     await db.providers.insert_one(provider_doc)
     token = create_token(provider_doc["id"], "provider")
-    return {"token": token, "provider": {k: v for k, v in provider_doc.items() if k not in ["password", "_id"]}}
+    
+    welcome_msg = "مرحباً بك في GPU Cloud Pro! 🎉"
+    if crypto_only:
+        welcome_msg += " (السحب متاح بالعملات الرقمية)"
+    
+    return {
+        "token": token, 
+        "provider": {k: v for k, v in provider_doc.items() if k not in ["password", "_id"]},
+        "message": welcome_msg
+    }
 
 @api_router.post("/provider/login")
 async def login_provider(user: UserLogin):
