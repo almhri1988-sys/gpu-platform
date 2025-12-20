@@ -1092,13 +1092,14 @@ async def get_supported_countries():
     return {
         "supported": [
             {"code": code, **info} 
-            for code, info in SUPPORTED_COUNTRIES.items()
+            for code, info in ALL_SUPPORTED_COUNTRIES.items()
         ],
-        "blocked": [
-            {"code": code, "name": name} 
-            for code, name in BLOCKED_COUNTRIES.items()
+        "crypto_only": [
+            {"code": code, **info} 
+            for code, info in CRYPTO_ONLY_COUNTRIES.items()
         ],
-        "total_supported": len(SUPPORTED_COUNTRIES)
+        "total_supported": len(ALL_SUPPORTED_COUNTRIES),
+        "message": "مرحباً بالجميع! 🌍"
     }
 
 @api_router.get("/countries/{country_code}")
@@ -1106,23 +1107,33 @@ async def get_country_details(country_code: str):
     """Get details for a specific country"""
     country_code = country_code.upper()
     
-    if country_code in BLOCKED_COUNTRIES:
-        raise HTTPException(status_code=403, detail=f"هذه الدولة محظورة: {BLOCKED_COUNTRIES[country_code]}")
+    if country_code not in ALL_SUPPORTED_COUNTRIES:
+        # إذا الدولة غير موجودة، نضيفها تلقائياً بالكريبتو
+        return {
+            "code": country_code,
+            "name": country_code,
+            "name_en": country_code,
+            "currency": "USD",
+            "payout_methods": ["crypto"],
+            "payout_methods_details": [{"method": "crypto", **PAYOUT_METHODS["crypto"]}],
+            "note": "دولتك مدعومة بالعملات الرقمية"
+        }
     
-    if country_code not in SUPPORTED_COUNTRIES:
-        raise HTTPException(status_code=404, detail="الدولة غير مدعومة حالياً")
-    
-    country = SUPPORTED_COUNTRIES[country_code]
+    country = ALL_SUPPORTED_COUNTRIES[country_code]
     payout_details = [
         {"method": m, **PAYOUT_METHODS[m]} 
         for m in country["payout_methods"] 
         if m in PAYOUT_METHODS
     ]
     
+    is_crypto_only = country_code in CRYPTO_ONLY_COUNTRIES
+    
     return {
         "code": country_code,
         **country,
-        "payout_methods_details": payout_details
+        "payout_methods_details": payout_details,
+        "crypto_only": is_crypto_only,
+        "note": "الدفع بالكريبتو فقط" if is_crypto_only else None
     }
 
 @api_router.get("/payout-methods")
