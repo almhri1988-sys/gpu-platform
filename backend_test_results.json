@@ -1,0 +1,109 @@
+{
+  "timestamp": "2025-12-20T13:27:52.625526",
+  "base_url": "https://gpucloud-share.preview.emergentagent.com",
+  "summary": {
+    "tests_run": 15,
+    "tests_passed": 14,
+    "tests_failed": 1,
+    "success_rate": 93.3
+  },
+  "test_results": [
+    {
+      "test_name": "API Root Endpoint",
+      "status": "PASSED",
+      "details": "",
+      "timestamp": "2025-12-20T13:27:51.441359"
+    },
+    {
+      "test_name": "Health Check Endpoint",
+      "status": "PASSED",
+      "details": "",
+      "timestamp": "2025-12-20T13:27:51.478892"
+    },
+    {
+      "test_name": "Seed Data",
+      "status": "PASSED",
+      "details": "",
+      "timestamp": "2025-12-20T13:27:51.526791"
+    },
+    {
+      "test_name": "User Registration",
+      "status": "PASSED",
+      "details": "",
+      "timestamp": "2025-12-20T13:27:51.570622"
+    },
+    {
+      "test_name": "User Login",
+      "status": "PASSED",
+      "details": "",
+      "timestamp": "2025-12-20T13:27:51.607681"
+    },
+    {
+      "test_name": "Get Current User",
+      "status": "PASSED",
+      "details": "",
+      "timestamp": "2025-12-20T13:27:51.646602"
+    },
+    {
+      "test_name": "Get All GPUs",
+      "status": "PASSED",
+      "details": "Found 10 GPUs",
+      "timestamp": "2025-12-20T13:27:51.683167"
+    },
+    {
+      "test_name": "Get GPUs by Region",
+      "status": "PASSED",
+      "details": "Found 2 GPUs in US East",
+      "timestamp": "2025-12-20T13:27:51.717584"
+    },
+    {
+      "test_name": "Get GPUs by Model",
+      "status": "PASSED",
+      "details": "Found 2 RTX 4090 GPUs",
+      "timestamp": "2025-12-20T13:27:51.751397"
+    },
+    {
+      "test_name": "Get Regions",
+      "status": "PASSED",
+      "details": "Found 5 regions",
+      "timestamp": "2025-12-20T13:27:51.793049"
+    },
+    {
+      "test_name": "Start Instance",
+      "status": "FAILED",
+      "details": "Insufficient balance: $0.00 < $0.89",
+      "timestamp": "2025-12-20T13:27:51.826141"
+    },
+    {
+      "test_name": "Get All Instances",
+      "status": "PASSED",
+      "details": "Found 0 total instances",
+      "timestamp": "2025-12-20T13:27:51.864304"
+    },
+    {
+      "test_name": "Get Transactions",
+      "status": "PASSED",
+      "details": "Found 0 transactions",
+      "timestamp": "2025-12-20T13:27:51.901640"
+    },
+    {
+      "test_name": "Get Invoices",
+      "status": "PASSED",
+      "details": "Found 0 invoices",
+      "timestamp": "2025-12-20T13:27:51.938391"
+    },
+    {
+      "test_name": "Create Payment Checkout",
+      "status": "PASSED",
+      "details": "Checkout URL created",
+      "timestamp": "2025-12-20T13:27:52.625495"
+    }
+  ],
+  "failed_tests": [
+    {
+      "test": "Start Instance",
+      "error": "Insufficient balance: $0.00 < $0.89",
+      "response": null
+    }
+  ]
+}
