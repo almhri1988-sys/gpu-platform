@@ -925,19 +925,54 @@ const MarketplacePage = () => {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="font-semibold text-lg">{gpu.name}</h3>
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
                       <Badge variant="outline" className="text-[#00D4FF] border-[#00D4FF]/30">
                         {gpu.vram}GB VRAM
                       </Badge>
-                      <Badge variant="outline" className="text-[#8B8B9E] border-[#8B8B9E]/30">
-                        {gpu.model}
-                      </Badge>
+                      {gpu.performance && (
+                        <Badge className={`
+                          ${gpu.performance.tier === 'ultra' ? 'bg-[#FF4757]/20 text-[#FF4757] border-[#FF4757]/30' : ''}
+                          ${gpu.performance.tier === 'premium' ? 'bg-[#FFB800]/20 text-[#FFB800] border-[#FFB800]/30' : ''}
+                          ${gpu.performance.tier === 'professional' ? 'bg-[#00FF88]/20 text-[#00FF88] border-[#00FF88]/30' : ''}
+                          ${gpu.performance.tier === 'high' ? 'bg-[#00D4FF]/20 text-[#00D4FF] border-[#00D4FF]/30' : ''}
+                          ${gpu.performance.tier === 'mid' ? 'bg-[#8B8B9E]/20 text-[#8B8B9E] border-[#8B8B9E]/30' : ''}
+                        `}>
+                          {gpu.performance.tier_label}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                   <div className="status-dot available"></div>
                 </div>
 
-                <div className="space-y-3 mb-6">
+                {/* Power Score */}
+                {gpu.performance && (
+                  <div className="mb-4 p-3 rounded-lg bg-[#0A0A0F]">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-[#8B8B9E]">مؤشر القوة</span>
+                      <span className="text-sm font-bold text-[#00D4FF]">{Math.round(gpu.performance.power_score)}/100</span>
+                    </div>
+                    <Progress value={gpu.performance.power_score} className="h-2" />
+                    <div className="flex justify-between mt-2 text-xs">
+                      <div className="flex items-center gap-1">
+                        <Zap className="w-3 h-3 text-[#FFB800]" />
+                        <span className="text-[#8B8B9E]">AI: {gpu.performance.ai_score}%</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <BarChart3 className="w-3 h-3 text-[#00FF88]" />
+                        <span className="text-[#8B8B9E]">Render: {gpu.performance.render_score}%</span>
+                      </div>
+                    </div>
+                    {gpu.performance.best_for && (
+                      <div className="mt-2 text-xs text-[#8B8B9E]">
+                        <span className="text-[#00D4FF]">مثالي لـ: </span>
+                        {gpu.performance.best_for.slice(0, 2).join(', ')}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-[#8B8B9E]">المنطقة</span>
                     <span className="flex items-center gap-1">
@@ -951,17 +986,13 @@ const MarketplacePage = () => {
                       {gpu.latency}ms
                     </span>
                   </div>
-                  {gpu.specs && (
-                    <>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-[#8B8B9E]">CUDA Cores</span>
-                        <span>{gpu.specs.cuda_cores?.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-[#8B8B9E]">TDP</span>
-                        <span>{gpu.specs.tdp}</span>
-                      </div>
-                    </>
+                  {gpu.performance?.health && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-[#8B8B9E]">حالة الكرت</span>
+                      <span className={gpu.performance.health.status === 'excellent' ? 'text-[#00FF88]' : 'text-[#FFB800]'}>
+                        {gpu.performance.health.status === 'excellent' ? 'ممتاز' : 'جيد'} ({gpu.performance.health.temperature}°C)
+                      </span>
+                    </div>
                   )}
                 </div>
 
