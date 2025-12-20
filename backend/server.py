@@ -1825,6 +1825,51 @@ async def stripe_webhook(request: Request):
 
 # ============== PROVIDER ROUTES ==============
 
+class QuickProviderRegister(BaseModel):
+    email: EmailStr
+    company_name: str = ""
+    password: Optional[str] = None
+    country: str = ""
+
+@api_router.post("/provider/quick-register")
+async def quick_register_provider(data: QuickProviderRegister):
+    """تسجيل سريع للمزودين - كلمة المرور اختيارية"""
+    existing = await db.providers.find_one({"email": data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="البريد مسجل مسبقاً")
+    
+    password = data.password if data.password else generate_strong_password()
+    company_name = data.company_name if data.company_name else f"مزود {data.email.split('@')[0]}"
+    country_code = data.country.upper() if data.country else ""
+    crypto_only = country_code in CRYPTO_ONLY_COUNTRIES if country_code else False
+    
+    provider_doc = {
+        "id": str(uuid.uuid4()),
+        "company_name": company_name,
+        "email": data.email,
+        "password": hash_password_secure(password),
+        "role": "provider",
+        "country": country_code,
+        "crypto_only": crypto_only,
+        "earnings": 0.0,
+        "pending_payout": 0.0,
+        "kyc_status": "approved",  # موافقة تلقائية
+        "kyc_level": "verified",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.providers.insert_one(provider_doc)
+    
+    await log_security_event("provider_registered", provider_doc["id"], {"email": data.email, "quick": True})
+    
+    token = create_token(provider_doc["id"], "provider")
+    
+    return {
+        "token": token,
+        "provider": {k: v for k, v in provider_doc.items() if k not in ["password", "_id"]},
+        "generated_password": password if not data.password else None,
+        "message": "تم إنشاء حسابك كمزود! 🎉" + (" احفظ كلمة المرور." if not data.password else "")
+    }
+
 @api_router.post("/provider/register")
 async def register_provider(data: ProviderCreate):
     # جميع الدول مرحب بها!
@@ -1839,17 +1884,20 @@ async def register_provider(data: ProviderCreate):
         "id": str(uuid.uuid4()),
         "company_name": data.company_name,
         "email": data.email,
-        "password": hash_password(data.password),
+        "password": hash_password_secure(data.password),
         "role": "provider",
         "country": country_code,
         "crypto_only": crypto_only,
         "earnings": 0.0,
         "pending_payout": 0.0,
-        "kyc_status": "none",
-        "kyc_level": "none",
+        "kyc_status": "approved",  # موافقة تلقائية
+        "kyc_level": "verified",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.providers.insert_one(provider_doc)
+    
+    await log_security_event("provider_registered", provider_doc["id"], {"email": data.email})
+    
     token = create_token(provider_doc["id"], "provider")
     
     welcome_msg = "مرحباً بك في GPU Cloud Pro! 🎉"
