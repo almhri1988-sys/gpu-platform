@@ -1337,6 +1337,12 @@ async def stripe_webhook(request: Request):
 
 @api_router.post("/provider/register")
 async def register_provider(data: ProviderCreate):
+    # Check if country is blocked
+    if data.country:
+        country_code = data.country.upper()
+        if country_code in BLOCKED_COUNTRIES:
+            raise HTTPException(status_code=403, detail=f"عذراً، هذه الدولة غير مدعومة: {BLOCKED_COUNTRIES[country_code]}")
+    
     existing = await db.providers.find_one({"email": data.email})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -1347,8 +1353,11 @@ async def register_provider(data: ProviderCreate):
         "email": data.email,
         "password": hash_password(data.password),
         "role": "provider",
+        "country": data.country.upper() if data.country else "",
         "earnings": 0.0,
         "pending_payout": 0.0,
+        "kyc_status": "none",
+        "kyc_level": "none",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.providers.insert_one(provider_doc)
