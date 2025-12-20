@@ -1143,7 +1143,7 @@ async def get_all_payout_methods():
 
 @api_router.post("/provider/kyc/submit")
 async def submit_kyc(data: ProviderKYC, authorization: str = Header(None)):
-    """Submit KYC documents for verification"""
+    """Submit KYC documents - موافقة تلقائية فورية"""
     if not authorization:
         raise HTTPException(status_code=401, detail="Not authenticated")
     token = authorization.split(" ")[1]
@@ -1151,12 +1151,7 @@ async def submit_kyc(data: ProviderKYC, authorization: str = Header(None)):
     
     country_code = data.country.upper()
     
-    # جميع الدول مدعومة الآن
-    if country_code not in ALL_SUPPORTED_COUNTRIES:
-        # نضيف الدولة تلقائياً بالكريبتو
-        pass  # مسموح
-    
-    # Create KYC record
+    # Create KYC record - موافقة فورية
     kyc_record = {
         "id": str(uuid.uuid4()),
         "provider_id": payload["user_id"],
@@ -1169,31 +1164,36 @@ async def submit_kyc(data: ProviderKYC, authorization: str = Header(None)):
         "phone": data.phone,
         "tax_id": data.tax_id,
         "crypto_only": country_code in CRYPTO_ONLY_COUNTRIES,
-        "status": "pending",
+        "status": "approved",  # ✅ موافقة تلقائية فورية
         "submitted_at": datetime.now(timezone.utc).isoformat(),
-        "reviewed_at": None,
-        "reviewer_notes": None
+        "reviewed_at": datetime.now(timezone.utc).isoformat(),
+        "reviewer_notes": "موافقة تلقائية"
     }
     await db.kyc_submissions.insert_one(kyc_record)
     
-    # Update provider
+    # Update provider - موثق فوراً
     await db.providers.update_one(
         {"id": payload["user_id"]},
         {"$set": {
             "country": country_code,
-            "kyc_status": "pending",
-            "kyc_level": "basic",
+            "kyc_status": "approved",
+            "kyc_level": "verified",  # ✅ موثق فوراً
             "kyc_submission_id": kyc_record["id"],
-            "crypto_only": country_code in CRYPTO_ONLY_COUNTRIES
+            "crypto_only": country_code in CRYPTO_ONLY_COUNTRIES,
+            "auto_payout": False,  # الافتراضي: سحب يدوي
+            "auto_payout_threshold": 100,  # حد السحب التلقائي
+            "auto_payout_method": "crypto",
+            "auto_payout_wallet": ""
         }}
     )
     
     return {
-        "message": "تم تقديم طلب التحقق بنجاح",
+        "message": "✅ تم التحقق والموافقة فوراً!",
         "kyc_id": kyc_record["id"],
-        "status": "pending",
-        "crypto_only": country_code in CRYPTO_ONLY_COUNTRIES,
-        "estimated_review": "24-48 ساعة"
+        "status": "approved",
+        "kyc_level": "verified",
+        "max_payout": 10000,
+        "crypto_only": country_code in CRYPTO_ONLY_COUNTRIES
     }
 
 @api_router.get("/provider/kyc/status")
