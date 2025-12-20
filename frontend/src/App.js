@@ -909,6 +909,7 @@ const DashboardLayout = ({ children }) => {
     { path: "/marketplace", label: "سوق GPUs", icon: Server },
     { path: "/instances", label: "الجلسات", icon: Activity },
     { path: "/billing", label: "الفوترة", icon: Wallet },
+    { path: "/security", label: "الأمان", icon: Shield },
   ];
 
   return (
