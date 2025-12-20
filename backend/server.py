@@ -489,7 +489,7 @@ async def get_instance_health(instance_id: str, user: dict = Depends(get_current
 
 @api_router.post("/instances/{instance_id}/failover")
 async def trigger_failover(instance_id: str, user: dict = Depends(get_current_user)):
-    """Manually trigger failover to a new GPU"""
+    """Manually trigger failover to a new GPU (if user wants)"""
     instance = await db.instances.find_one({"id": instance_id, "user_id": user["id"]}, {"_id": 0})
     if not instance:
         raise HTTPException(status_code=404, detail="Instance not found")
@@ -499,6 +499,25 @@ async def trigger_failover(instance_id: str, user: dict = Depends(get_current_us
         raise HTTPException(status_code=400, detail=result["error"])
     
     return result
+
+@api_router.get("/instances/{instance_id}/failover-history")
+async def get_instance_failover_history(instance_id: str, user: dict = Depends(get_current_user)):
+    """Get failover history for a specific instance"""
+    instance = await db.instances.find_one({"id": instance_id, "user_id": user["id"]}, {"_id": 0})
+    if not instance:
+        raise HTTPException(status_code=404, detail="Instance not found")
+    
+    logs = await db.failover_logs.find(
+        {"instance_id": instance_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    return {
+        "instance_id": instance_id,
+        "total_failovers": len(logs),
+        "seamless_failovers": len([l for l in logs if l.get("seamless")]),
+        "history": logs
+    }
 
 @api_router.get("/notifications")
 async def get_notifications(user: dict = Depends(get_current_user)):
