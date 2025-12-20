@@ -747,7 +747,7 @@ PLATFORM_FEE_PERCENT = 15  # عمولة المنصة
 PROVIDER_SHARE_PERCENT = 85  # حصة المزود
 
 async def distribute_revenue(instance: dict, total_amount: float) -> dict:
-    """توزيع الأرباح تلقائياً عند انتهاء الجلسة"""
+    """توزيع الأرباح تلقائياً عند انتهاء الجلسة + سحب تلقائي إن مفعل"""
     
     platform_fee = total_amount * (PLATFORM_FEE_PERCENT / 100)
     provider_share = total_amount * (PROVIDER_SHARE_PERCENT / 100)
@@ -786,6 +786,9 @@ async def distribute_revenue(instance: dict, total_amount: float) -> dict:
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         await db.provider_transactions.insert_one(provider_transaction)
+        
+        # === السحب التلقائي للمزود إن مفعل ===
+        await check_and_execute_auto_payout(provider_id)
     
     # Record platform revenue
     platform_transaction = {
@@ -806,6 +809,71 @@ async def distribute_revenue(instance: dict, total_amount: float) -> dict:
         "provider_share": provider_share,
         "provider_id": provider_id
     }
+
+async def check_and_execute_auto_payout(provider_id: str):
+    """فحص وتنفيذ السحب التلقائي للمزود"""
+    provider = await db.providers.find_one({"id": provider_id}, {"_id": 0})
+    if not provider:
+        return
+    
+    # هل السحب التلقائي مفعل؟
+    if not provider.get("auto_payout", False):
+        return
+    
+    threshold = provider.get("auto_payout_threshold", 100)
+    pending = provider.get("pending_payout", 0)
+    
+    # هل وصل للحد المطلوب؟
+    if pending < threshold:
+        return
+    
+    wallet = provider.get("auto_payout_wallet", "")
+    if not wallet:
+        return  # لا يوجد محفظة محددة
+    
+    # تنفيذ السحب التلقائي
+    method = provider.get("auto_payout_method", "crypto")
+    crypto_currency = provider.get("auto_payout_crypto_currency", "USDT")
+    network = provider.get("auto_payout_network", "TRC20")
+    
+    payout = {
+        "id": str(uuid.uuid4()),
+        "provider_id": provider_id,
+        "amount": pending,
+        "fee": 0,  # بدون رسوم للسحب التلقائي
+        "net_amount": pending,
+        "method": method,
+        "method_name": "سحب تلقائي",
+        "crypto_currency": crypto_currency,
+        "crypto_wallet": wallet,
+        "crypto_network": network,
+        "country": provider.get("country", ""),
+        "status": "auto_completed",
+        "auto_payout": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "processed_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.provider_payouts.insert_one(payout)
+    
+    # خصم من الرصيد المعلق
+    await db.providers.update_one(
+        {"id": provider_id},
+        {"$set": {"pending_payout": 0}}
+    )
+    
+    # إشعار المزود
+    notification = {
+        "id": str(uuid.uuid4()),
+        "user_id": provider_id,
+        "type": "auto_payout",
+        "title": "💰 سحب تلقائي مكتمل",
+        "message": f"تم تحويل ${pending:.2f} تلقائياً إلى محفظتك ({crypto_currency} - {network})",
+        "read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.notifications.insert_one(notification)
+    
+    logging.info(f"Auto-payout executed for provider {provider_id}: ${pending}")
 
 @api_router.post("/system/health-check")
 async def trigger_health_check():
