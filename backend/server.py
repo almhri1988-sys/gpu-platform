@@ -121,6 +121,15 @@ GPU_BENCHMARKS = {
     "RTX 3090": {"power_score": 55, "tier": "mid", "ai_score": 50, "render_score": 75, "best_for": ["Gaming", "3D Rendering", "AI Inference"]},
 }
 
+# Health Thresholds for Failover
+HEALTH_THRESHOLDS = {
+    "temperature_warning": 75,  # درجة مئوية
+    "temperature_critical": 85,
+    "memory_health_min": 80,  # نسبة مئوية
+    "utilization_max": 98,
+    "latency_max": 100,  # ms
+}
+
 def get_gpu_performance(model: str, vram: int, specs: dict) -> dict:
     """Calculate GPU performance metrics"""
     benchmark = GPU_BENCHMARKS.get(model, {
