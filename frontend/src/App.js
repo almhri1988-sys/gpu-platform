@@ -2641,6 +2641,11 @@ function App() {
               <DashboardLayout><BillingPage /></DashboardLayout>
             </ProtectedRoute>
           } />
+          <Route path="/security" element={
+            <ProtectedRoute>
+              <DashboardLayout><SecurityPage /></DashboardLayout>
+            </ProtectedRoute>
+          } />
           <Route path="/admin" element={
             <ProtectedRoute>
               <DashboardLayout><AdminDashboard /></DashboardLayout>
