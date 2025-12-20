@@ -1,0 +1,183 @@
+<analysis>**original_problem_statement:**
+الاسم: GPU Cloud Pro
+المطلوب: بناء منصة وسيطة (Marketplace) لتأجير كروت الشاشة، مشابهة لنظام RunPod و Vast.ai، تعتمد على الأتمتة الكاملة والفوترة بالثانية.
+
+**PRODUCT REQUIREMENTS:**
+1.  **نظام المستخدمين:** تسجيل، دخول، لوحة تحكم.
+2.  **الدفع والفوترة:** الدفع الإلكتروني (Stripe)، نظام رصيد، فواتير تلقائية، احتساب الاستخدام بالثانية.
+3.  **إدارة الـ GPU:** اختيار نوع GPU، تشغيل/إيقاف تلقائي، إيقاف عند نفاد الرصيد.
+4.  **نظام للمزودين (Providers):** لوحة تحكم لإضافة GPUs وعرض الأرباح.
+5.  **توزيع الأرباح:** تقسيم تلقائي (15% للمنصة، 85% للمزود).
+6.  **Failover تلقائي:** نقل جلسة المستخدم إلى GPU آخر عند حدوث عطل بدون أن يشعر المستخدم.
+7.  **نظام KYC:** التحقق من هوية المزودين (تم جعله تلقائياً لاحقاً).
+8.  **دعم دولي:** السماح للمزودين من جميع الدول، مع استخدام العملات الرقمية (Crypto) كخيار للدفع في الدول المحظورة.
+9.  **نظام إشعارات:** إشعارات عبر البريد الإلكتروني وفي الواجهة عند نفاد الرصيد أو حدوث عطل.
+10. **الأمان:** نظام مصادقة قوي، تشفير، وتأمين المنصة.
+11. **التصميم:** تصميم عصري ومظلم (Dark Mode) مع لون أزرق نيوني.
+
+**User's preferred language**:
+Arabic (العربية). The next agent MUST respond in Arabic only.
+
+**what currently exists?**
+A full-stack GPU rental marketplace application named GPU Cloud Pro has been developed. The backend is built with FastAPI and MongoDB, and the frontend with React and TailwindCSS.
+
+The platform includes:
+-   User and Provider authentication (registration, login).
+-   A marketplace to browse and rent GPUs, with performance scoring.
+-   Per-second billing and instance management (start/stop).
+-   Automated failover system that transparently migrates user sessions on hardware degradation.
+-   An automated profit-sharing system (15% platform, 85% provider) with automatic payouts for providers.
+-   Admin and Provider dashboards.
+-   A UI notification system for events like low balance and failover.
+-   Initial security hardening, including Bcrypt for password hashing and API rate limiting.
+
+**Last working item**:
+-   **Last item agent was working:** Implementing comprehensive security enhancements to protect the platform and its users. The agent successfully added stronger password hashing (switching from SHA256 to Bcrypt), API rate limiting, and an audit trail API () for administrators to monitor security-sensitive events.
+-   **Status:** IN PROGRESS
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** both
+-   **User Testing Done:** N
+
+**All Pending/In progress Issue list**:
+-   There are no pending bugs reported by the user. The agent is currently working on feature enhancements.
+
+**In progress Task List**:
+-   **Task 1: Complete Security Hardening (P0)**
+    -   **Where to resume:** The agent has added Bcrypt, rate limiting, and audit logs. The next steps are to implement Two-Factor Authentication (2FA) for users and encrypt sensitive financial data at rest in the database.
+    -   **What will be achieved with this?** This will significantly improve the security posture of the platform, protecting user accounts from unauthorized access and securing sensitive financial information.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** Both. Backend for the 2FA logic and data encryption, and frontend for the 2FA user interface.
+    -   **Blocked on something:** None.
+
+**Upcoming and Future Tasks**
+-   **Upcoming Tasks:**
+    -   P1: Implement Two-Factor Authentication (2FA) for user accounts.
+    -   P1: Encrypt sensitive financial data (e.g., withdrawal details) in the database.
+    -   P2: Integrate with a real GPU provider API (like RunPod or Vast.ai) to replace the current mock data.
+    -   P2: Switch Stripe from test mode to production mode for live payments.
+
+-   **Future Tasks:**
+    -   Refactor the monolithic backend () and frontend () into smaller, modular files for better maintainability.
+    -   Create dedicated test files for backend and frontend to ensure stability.
+
+**Completed work in this session**
+-   **Platform Core:**
+    -   Full-stack application setup (FastAPI backend, React frontend).
+    -   Database models for Users, GPUs, Instances, Transactions, Providers.
+-   **User Features:**
+    -   User authentication (register/login).
+    -   GPU marketplace with filtering and performance scoring.
+    -   Instance management (start/stop sessions).
+    -   Real-time, per-second billing system.
+    -   UI-based notification system for key events.
+-   **Provider & Financial Features:**
+    -   Provider registration and dashboard.
+    -   Automated 15%/85% profit-sharing mechanism.
+    -   Automated KYC approval system.
+    -   Global provider support, including crypto payouts for restricted regions.
+    -   Provider choice for manual or automatic fund withdrawal.
+-   **Automation & Reliability:**
+    -   Automated, transparent failover system for active GPU instances.
+-   **Security (Initial):**
+    -   Upgraded password hashing to Bcrypt.
+    -   Implemented API rate limiting to prevent abuse.
+    -   Created a security audit log for admin oversight.
+
+**Earlier issues found/mentioned but not fixed**
+-   None. The agent addressed all issues as they arose.
+
+**Known issue recurrence from previous fork**
+-   None.
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+-   **Backend:** FastAPI, Python, MongoDB (using  for async).
+-   **Frontend:** React.js, TailwindCSS,  for icons.
+-   **Authentication:** JWT (JSON Web Tokens).
+-   **Security:** Bcrypt for password hashing,  for rate limiting.
+-   **Payments:** Stripe for processing payments and managing balances.
+-   **Architecture:** Full-stack monolithic application (backend and frontend are each in a single large file).
+
+**key DB schema**
+-   **users:** 
+-   **providers:** 
+-   **gpus:** 
+-   **instances:** 
+-   **transactions:** 
+-   **payouts:** 
+-   **security_logs:** 
+-   **failover_logs:** 
+
+**changes in tech stack**
+-   Added  for stronger password hashing.
+-   Added  for API rate limiting.
+
+**All files of reference**
+-   **/app/backend/server.py**: Contains the entire FastAPI application, including all database models, API routes, and business logic. It's the sole backend file.
+-   **/app/frontend/src/App.js**: Contains the entire React application, including all components, pages, state management, and API calls. It's the sole frontend logic file.
+-   **/app/backend/requirements.txt**: Lists all Python dependencies.
+-   **/app/frontend/package.json**: Lists all Node.js dependencies.
+
+**Areas that need refactoring**
+-   ****: This file is over 1800 lines long and contains all models, routes, and logic. It should be broken down into a structured FastAPI project (e.g., separate files for routes, models, services, and configuration).
+-   ****: This file is over 1500 lines long and contains all React components and application logic. It should be refactored into a proper component-based architecture, with components, hooks, and services in separate files.
+
+**key api endpoints**
+-    & : User authentication.
+-   : List all available GPUs.
+-   : Start a new GPU rental session.
+-   : Stop an active session and trigger billing.
+-   : Manually trigger the failover process.
+-   : Get statistics for a GPU provider.
+-   : Request a payout.
+-   : Get platform-wide statistics.
+-   : View the security audit trail.
+
+**Critical Info for New Agent**
+-   **Monolithic Codebase:** Be aware that both the frontend and backend are single-file monoliths. Navigating and modifying  and  will require careful searching and understanding of the existing structure. Refactoring is highly recommended for future work.
+-   **Automation Decisions:** The user has explicitly requested full automation. KYC is auto-approved, and providers can enable automatic withdrawals. Your focus should be on maintaining and enhancing this hands-off approach.
+-   **Global Access Policy:** The platform is intentionally open to all countries. For sanctioned regions, crypto is the designated payment method. Do not re-introduce geographic restrictions unless specifically requested.
+-   **Security is a Priority:** The user is concerned about security. Continue the work on hardening the platform by implementing the pending 2FA and data encryption tasks.
+
+**documents and test_reports created in this job**
+-   
+-   
+
+**Last 10 User Messages and any pending HUMAN messages**
+1.  الان كل شي مكتمل؟ من ناحية الامان للمؤحر وحماية بيانات الجميع المنصة والمستخدمين والمؤجرين؟
+2.  سحب ارباح المنصة يدوي ومرن جدا جدا واموال المؤجرين تلقائي او يدوي كيفهم ولا احتاج اتحقق للهوية موافق للجميع
+3.  يعني خلاص لااحتاج تدخل يدوي ابدا مهما كان والتوزيع للاموال تلقائي؟
+4.  المنصة مفتوحة للجميع! 🌍
+5.  لا عادي اسمح للجميع اهم شي منصتي تحقق الارباح والجميع يشتغل
+6.  أبقي الحظر كما هو (الأكثر أماناً)؟
+7.  والدول المحظورة كيف نجعلهم يشتغلوا معنا؟
+8.  تم إضافة نظام KYC والدول المدعومة
+9.  نعم
+10. هل جميع دول العالم يقدروا يأجروا كروتهم؟
+
+**Project Health Check:**
+-   **Broken:**
+    -   None. The application is functional based on the agent's tests.
+-   **Mocked:**
+    -   GPU instance creation relies on mock data and processes. It is not connected to a real virtualization or container orchestration system (like Kubernetes or RunPod's API).
+    -   Stripe integration is in test mode.
+    -   Email notifications are logged to the console but not sent via a real email service.
+
+**3rd Party Integrations**
+-   **Stripe (Payments):** Used for handling user payments, balances, and provider payouts. Requires a user API key for production but uses a pre-configured test key in the current environment.
+
+**Testing status**
+-   **Testing agent used after significant changes:** YES (used once after initial build).
+-   **Troubleshoot agent used after agent stuck in loop:** NO
+-   **Test files created:** None.
+-   **Known regressions:** None.
+
+**Credentials to test flow:**
+-   **User:**  / 
+-   **Provider:**  / 
+-   **Admin:**  / 
+
+**What agent forgot to execute**
+-   The agent planned to implement Two-Factor Authentication (2FA) and encrypt sensitive financial data as part of the security enhancements but has not yet started the implementation. This is the highest priority pending task.</analysis>

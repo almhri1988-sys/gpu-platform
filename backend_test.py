@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 class GPUCloudAPITester:
-    def __init__(self, base_url="https://gpucloud-share.preview.emergentagent.com"):
+    def __init__(self, base_url="https://gpucloud.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.token = None
@@ -247,7 +247,7 @@ class GPUCloudAPITester:
         
         checkout_data = {
             "amount": 10.0,
-            "origin_url": "https://gpucloud-share.preview.emergentagent.com"
+            "origin_url": "https://gpucloud.preview.emergentagent.com"
         }
         
         success, data = self.make_request('POST', 'payments/create-checkout', checkout_data)
