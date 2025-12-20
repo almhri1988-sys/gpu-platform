@@ -466,6 +466,73 @@ async def auto_health_check_and_failover():
             )
             logger.info(f"Auto-failover executed for instance {instance['id']}")
 
+# ============== REVENUE SPLIT SYSTEM ==============
+# نظام توزيع الأرباح: 15% للمنصة، 85% للمزود
+
+PLATFORM_FEE_PERCENT = 15  # عمولة المنصة
+PROVIDER_SHARE_PERCENT = 85  # حصة المزود
+
+async def distribute_revenue(instance: dict, total_amount: float) -> dict:
+    """توزيع الأرباح تلقائياً عند انتهاء الجلسة"""
+    
+    platform_fee = total_amount * (PLATFORM_FEE_PERCENT / 100)
+    provider_share = total_amount * (PROVIDER_SHARE_PERCENT / 100)
+    
+    # Get GPU to find provider
+    gpu = await db.gpus.find_one({"id": instance["gpu_id"]}, {"_id": 0})
+    if not gpu:
+        return {"error": "GPU not found"}
+    
+    provider_id = gpu.get("provider_id")
+    
+    # Update provider wallet
+    if provider_id:
+        await db.providers.update_one(
+            {"id": provider_id},
+            {
+                "$inc": {
+                    "earnings": provider_share,
+                    "pending_payout": provider_share
+                }
+            }
+        )
+        
+        # Create provider transaction
+        provider_transaction = {
+            "id": str(uuid.uuid4()),
+            "provider_id": provider_id,
+            "instance_id": instance["id"],
+            "gpu_id": instance["gpu_id"],
+            "gpu_name": instance["gpu_name"],
+            "type": "earning",
+            "gross_amount": total_amount,
+            "platform_fee": platform_fee,
+            "net_amount": provider_share,
+            "status": "completed",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.provider_transactions.insert_one(provider_transaction)
+    
+    # Record platform revenue
+    platform_transaction = {
+        "id": str(uuid.uuid4()),
+        "instance_id": instance["id"],
+        "user_id": instance["user_id"],
+        "provider_id": provider_id,
+        "type": "platform_fee",
+        "amount": platform_fee,
+        "percent": PLATFORM_FEE_PERCENT,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.platform_revenue.insert_one(platform_transaction)
+    
+    return {
+        "total": total_amount,
+        "platform_fee": platform_fee,
+        "provider_share": provider_share,
+        "provider_id": provider_id
+    }
+
 @api_router.post("/system/health-check")
 async def trigger_health_check():
     """Trigger manual health check for all instances (Admin only)"""
