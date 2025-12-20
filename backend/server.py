@@ -1110,19 +1110,89 @@ async def admin_stats(authorization: str = Header(None)):
     total_gpus = await db.gpus.count_documents({})
     active_instances = await db.instances.count_documents({"status": "running"})
     
-    revenue_pipeline = [
-        {"$match": {"type": "deposit", "status": "completed"}},
+    # Platform revenue (15% fees)
+    platform_revenue = await db.platform_revenue.aggregate([
         {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
-    ]
-    revenue = await db.payment_transactions.aggregate(revenue_pipeline).to_list(1)
+    ]).to_list(1)
+    
+    # Provider payouts
+    provider_payouts = await db.provider_payouts.aggregate([
+        {"$match": {"status": "completed"}},
+        {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+    ]).to_list(1)
+    
+    # Total transactions value
+    total_transactions = await db.provider_transactions.aggregate([
+        {"$group": {"_id": None, "gross": {"$sum": "$gross_amount"}, "net": {"$sum": "$net_amount"}}}
+    ]).to_list(1)
     
     return {
         "total_users": total_users,
         "total_providers": total_providers,
         "total_gpus": total_gpus,
         "active_instances": active_instances,
-        "total_revenue": revenue[0]["total"] if revenue else 0
+        "revenue": {
+            "platform_fees": platform_revenue[0]["total"] if platform_revenue else 0,
+            "total_transactions": total_transactions[0]["gross"] if total_transactions else 0,
+            "provider_share": total_transactions[0]["net"] if total_transactions else 0,
+            "provider_payouts": provider_payouts[0]["total"] if provider_payouts else 0,
+            "fee_percent": PLATFORM_FEE_PERCENT
+        }
     }
+
+@api_router.get("/admin/revenue")
+async def admin_revenue(authorization: str = Header(None)):
+    """Detailed platform revenue breakdown"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = authorization.split(" ")[1]
+    payload = verify_token(token)
+    
+    user = await db.users.find_one({"id": payload["user_id"]})
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Get all platform fees
+    fees = await db.platform_revenue.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    # Get pending payouts
+    pending_payouts = await db.provider_payouts.find(
+        {"status": "pending"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return {
+        "platform_fees": fees,
+        "pending_payouts": pending_payouts,
+        "fee_percent": PLATFORM_FEE_PERCENT,
+        "provider_percent": PROVIDER_SHARE_PERCENT
+    }
+
+@api_router.post("/admin/payout/{payout_id}/process")
+async def process_payout(payout_id: str, authorization: str = Header(None)):
+    """Admin: Process a payout request"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = authorization.split(" ")[1]
+    payload = verify_token(token)
+    
+    user = await db.users.find_one({"id": payload["user_id"]})
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    payout = await db.provider_payouts.find_one({"id": payout_id})
+    if not payout:
+        raise HTTPException(status_code=404, detail="Payout not found")
+    
+    await db.provider_payouts.update_one(
+        {"id": payout_id},
+        {"$set": {
+            "status": "completed",
+            "processed_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": "Payout processed", "payout_id": payout_id}
 
 # ============== SEED DATA ==============
 
