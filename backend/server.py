@@ -1484,8 +1484,11 @@ async def get_provider_earnings(authorization: str = Header(None)):
 
 class PayoutRequest(BaseModel):
     amount: float
-    method: str = "bank_transfer"  # bank_transfer, paypal, crypto
+    method: str = "bank_transfer"
     account_details: Dict = {}
+    crypto_currency: str = ""  # USDT, USDC, BTC, ETH
+    crypto_wallet: str = ""
+    crypto_network: str = ""  # TRC20, ERC20, BEP20
 
 @api_router.post("/provider/payout/request")
 async def request_payout(data: PayoutRequest, authorization: str = Header(None)):
@@ -1499,21 +1502,61 @@ async def request_payout(data: PayoutRequest, authorization: str = Header(None))
     if not provider:
         raise HTTPException(status_code=404, detail="Provider not found")
     
+    # Check KYC level
+    kyc_level = provider.get("kyc_level", "none")
+    kyc_info = KYC_LEVELS.get(kyc_level, KYC_LEVELS["none"])
+    
+    if kyc_level == "none":
+        raise HTTPException(status_code=403, detail="يجب إكمال التحقق من الهوية (KYC) أولاً للسحب")
+    
+    if data.amount > kyc_info["max_payout"]:
+        raise HTTPException(
+            status_code=403, 
+            detail=f"الحد الأقصى للسحب بمستوى {kyc_info['label']} هو ${kyc_info['max_payout']}. قم بترقية حسابك للسحب أكثر."
+        )
+    
+    # Check payout method is valid for provider's country
+    country_code = provider.get("country", "")
+    country_info = SUPPORTED_COUNTRIES.get(country_code, {})
+    available_methods = country_info.get("payout_methods", ["crypto"])
+    
+    if data.method not in available_methods and data.method != "crypto":
+        raise HTTPException(
+            status_code=400, 
+            detail=f"طريقة السحب غير متاحة لبلدك. الطرق المتاحة: {', '.join(available_methods)}"
+        )
+    
+    # Check minimum amount for method
+    method_info = PAYOUT_METHODS.get(data.method, {})
+    min_amount = method_info.get("min", 10)
+    if data.amount < min_amount:
+        raise HTTPException(status_code=400, detail=f"الحد الأدنى للسحب بـ {method_info.get('name', data.method)} هو ${min_amount}")
+    
     available = provider.get("pending_payout", 0)
     if data.amount > available:
-        raise HTTPException(status_code=400, detail=f"Insufficient balance. Available: ${available:.2f}")
+        raise HTTPException(status_code=400, detail=f"رصيد غير كافي. المتاح: ${available:.2f}")
     
-    if data.amount < 10:
-        raise HTTPException(status_code=400, detail="Minimum payout is $10")
+    # Calculate fee
+    fee_percent = method_info.get("fee_percent", 0)
+    fee_amount = data.amount * (fee_percent / 100)
+    net_amount = data.amount - fee_amount
     
     # Create payout request
     payout = {
         "id": str(uuid.uuid4()),
         "provider_id": payload["user_id"],
         "amount": data.amount,
+        "fee": round(fee_amount, 2),
+        "net_amount": round(net_amount, 2),
         "method": data.method,
+        "method_name": method_info.get("name", data.method),
         "account_details": data.account_details,
-        "status": "pending",  # pending -> processing -> completed
+        "crypto_currency": data.crypto_currency if data.method == "crypto" else None,
+        "crypto_wallet": data.crypto_wallet if data.method == "crypto" else None,
+        "crypto_network": data.crypto_network if data.method == "crypto" else None,
+        "country": country_code,
+        "status": "pending",
+        "processing_days": method_info.get("processing_days", "3-5"),
         "created_at": datetime.now(timezone.utc).isoformat(),
         "processed_at": None
     }
@@ -1526,11 +1569,14 @@ async def request_payout(data: PayoutRequest, authorization: str = Header(None))
     )
     
     return {
-        "message": "Payout request submitted",
+        "message": "تم تقديم طلب السحب بنجاح",
         "payout_id": payout["id"],
         "amount": data.amount,
+        "fee": round(fee_amount, 2),
+        "net_amount": round(net_amount, 2),
+        "method": payout["method_name"],
         "status": "pending",
-        "estimated_processing": "1-3 business days"
+        "estimated_processing": payout["processing_days"]
     }
 
 @api_router.get("/provider/payouts")
