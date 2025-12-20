@@ -505,8 +505,30 @@ const RegisterPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState(null);
+  const [copied, setCopied] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  // توليد كلمة مرور مقترحة
+  const generatePassword = async () => {
+    try {
+      const res = await axios.get(`${API}/auth/generate-password`);
+      setPassword(res.data.password);
+      setShowPassword(true);
+      toast.success("تم توليد كلمة مرور قوية!");
+    } catch (e) {
+      toast.error("فشل توليد كلمة المرور");
+    }
+  };
+
+  const copyPassword = () => {
+    navigator.clipboard.writeText(password);
+    setCopied(true);
+    toast.success("تم نسخ كلمة المرور!");
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -522,6 +544,83 @@ const RegisterPage = () => {
     }
   };
 
+  // تسجيل سريع بالبريد فقط
+  const handleQuickRegister = async () => {
+    if (!email) {
+      toast.error("أدخل بريدك الإلكتروني");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await axios.post(`${API}/auth/quick-register`, { 
+        email, 
+        name: name || email.split("@")[0]
+      });
+      
+      if (res.data.generated_password) {
+        setGeneratedPassword(res.data.generated_password);
+        toast.success("تم إنشاء حسابك! احفظ كلمة المرور");
+      } else {
+        localStorage.setItem("token", res.data.token);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "فشل إنشاء الحساب");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // إذا تم توليد كلمة مرور - أظهر نافذة الحفظ
+  if (generatedPassword) {
+    return (
+      <div className="min-h-screen gradient-mesh flex items-center justify-center px-4">
+        <Card className="w-full max-w-md gpu-card">
+          <CardHeader className="text-center">
+            <div className="w-16 h-16 rounded-full bg-[#00FF88]/20 flex items-center justify-center mx-auto mb-4">
+              <Check className="w-8 h-8 text-[#00FF88]" />
+            </div>
+            <CardTitle className="text-2xl">تم إنشاء حسابك! 🎉</CardTitle>
+            <CardDescription>احفظ كلمة المرور الخاصة بك</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="p-4 rounded-lg bg-[#FFB800]/10 border border-[#FFB800]/30">
+              <p className="text-sm text-[#FFB800] mb-2 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                مهم جداً - احفظ كلمة المرور
+              </p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 p-3 rounded bg-[#0A0A0F] text-lg font-mono text-[#00D4FF]">
+                  {generatedPassword}
+                </code>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    navigator.clipboard.writeText(generatedPassword);
+                    toast.success("تم نسخ كلمة المرور!");
+                  }}
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            <Button
+              className="w-full btn-neon"
+              onClick={() => {
+                localStorage.setItem("token", generatedPassword);
+                window.location.href = "/login";
+              }}
+            >
+              فهمت، سجل دخولي
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen gradient-mesh flex items-center justify-center px-4">
       <Card className="w-full max-w-md gpu-card" data-testid="register-card">
@@ -535,15 +634,48 @@ const RegisterPage = () => {
           <CardDescription>ابدأ باستخدام GPU Cloud Pro</CardDescription>
         </CardHeader>
         <CardContent>
+          {/* تسجيل سريع */}
+          <div className="mb-6 p-4 rounded-lg bg-[#00D4FF]/5 border border-[#00D4FF]/20">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="w-5 h-5 text-[#00D4FF]" />
+              <span className="font-medium text-[#00D4FF]">تسجيل سريع</span>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                type="email"
+                placeholder="بريدك@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-1"
+              />
+              <Button 
+                onClick={handleQuickRegister} 
+                disabled={loading}
+                className="btn-neon whitespace-nowrap"
+              >
+                {loading ? "..." : "ابدأ الآن"}
+              </Button>
+            </div>
+            <p className="text-xs text-[#8B8B9E] mt-2">سيتم إنشاء كلمة مرور آمنة تلقائياً</p>
+          </div>
+
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[#1E1E2E]"></div>
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-[#12121A] px-2 text-[#8B8B9E]">أو أنشئ حساب بكلمة مرورك</span>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">الاسم</Label>
+              <Label htmlFor="name">الاسم (اختياري)</Label>
               <Input
                 id="name"
                 placeholder="اسمك"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                required
                 data-testid="register-name-input"
               />
             </div>
@@ -560,17 +692,54 @@ const RegisterPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">كلمة المرور</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                data-testid="register-password-input"
-              />
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">كلمة المرور</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={generatePassword}
+                  className="text-[#00D4FF] hover:text-[#00D4FF]/80 h-auto p-0 text-xs"
+                >
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  اقترح كلمة مرور
+                </Button>
+              </div>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  data-testid="register-password-input"
+                  className="pr-20"
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                  {password && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={copyPassword}
+                    >
+                      {copied ? <Check className="w-4 h-4 text-[#00FF88]" /> : <Copy className="w-4 h-4" />}
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
             </div>
             <Button type="submit" className="w-full btn-neon" disabled={loading} data-testid="register-submit-btn">
               {loading ? "جاري التحميل..." : "إنشاء حساب"}
