@@ -680,7 +680,10 @@ async def stop_instance(instance_id: str, user: dict = Depends(get_current_user)
     new_balance = user["balance"] - total_cost
     await db.users.update_one({"id": user["id"]}, {"$set": {"balance": max(0, new_balance)}})
     
-    # Create transaction
+    # === توزيع الأرباح فورياً ===
+    revenue_split = await distribute_revenue(instance, total_cost)
+    
+    # Create transaction with revenue split details
     transaction = {
         "id": str(uuid.uuid4()),
         "user_id": user["id"],
@@ -688,6 +691,10 @@ async def stop_instance(instance_id: str, user: dict = Depends(get_current_user)
         "type": "usage",
         "description": f"GPU usage: {instance['gpu_name']} ({int(duration_seconds)}s)",
         "instance_id": instance_id,
+        "revenue_split": {
+            "platform_fee": revenue_split.get("platform_fee", 0),
+            "provider_share": revenue_split.get("provider_share", 0)
+        },
         "created_at": stopped.isoformat()
     }
     await db.transactions.insert_one(transaction)
@@ -695,7 +702,7 @@ async def stop_instance(instance_id: str, user: dict = Depends(get_current_user)
     # Free GPU
     await db.gpus.update_one({"id": instance["gpu_id"]}, {"$set": {"status": "available"}})
     
-    # Create invoice
+    # Create invoice with revenue breakdown
     invoice = {
         "id": str(uuid.uuid4()),
         "user_id": user["id"],
@@ -703,6 +710,12 @@ async def stop_instance(instance_id: str, user: dict = Depends(get_current_user)
         "gpu_name": instance["gpu_name"],
         "duration_seconds": int(duration_seconds),
         "total_cost": round(total_cost, 4),
+        "revenue_split": {
+            "platform_fee": round(revenue_split.get("platform_fee", 0), 4),
+            "platform_percent": PLATFORM_FEE_PERCENT,
+            "provider_share": round(revenue_split.get("provider_share", 0), 4),
+            "provider_percent": PROVIDER_SHARE_PERCENT
+        },
         "created_at": stopped.isoformat()
     }
     await db.invoices.insert_one(invoice)
@@ -711,7 +724,11 @@ async def stop_instance(instance_id: str, user: dict = Depends(get_current_user)
         "message": "Instance stopped",
         "duration_seconds": int(duration_seconds),
         "total_cost": round(total_cost, 4),
-        "new_balance": round(max(0, new_balance), 2)
+        "new_balance": round(max(0, new_balance), 2),
+        "revenue_split": {
+            "platform_fee": f"${revenue_split.get('platform_fee', 0):.4f} ({PLATFORM_FEE_PERCENT}%)",
+            "provider_share": f"${revenue_split.get('provider_share', 0):.4f} ({PROVIDER_SHARE_PERCENT}%)"
+        }
     }
 
 @api_router.get("/instances", response_model=List[InstanceResponse])
