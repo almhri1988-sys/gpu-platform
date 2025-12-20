@@ -1149,12 +1149,12 @@ async def submit_kyc(data: ProviderKYC, authorization: str = Header(None)):
     token = authorization.split(" ")[1]
     payload = verify_token(token)
     
-    # Check if country is supported
     country_code = data.country.upper()
-    if country_code in BLOCKED_COUNTRIES:
-        raise HTTPException(status_code=403, detail=f"هذه الدولة محظورة: {BLOCKED_COUNTRIES[country_code]}")
-    if country_code not in SUPPORTED_COUNTRIES:
-        raise HTTPException(status_code=400, detail="الدولة غير مدعومة")
+    
+    # جميع الدول مدعومة الآن
+    if country_code not in ALL_SUPPORTED_COUNTRIES:
+        # نضيف الدولة تلقائياً بالكريبتو
+        pass  # مسموح
     
     # Create KYC record
     kyc_record = {
@@ -1168,21 +1168,23 @@ async def submit_kyc(data: ProviderKYC, authorization: str = Header(None)):
         "address": data.address,
         "phone": data.phone,
         "tax_id": data.tax_id,
-        "status": "pending",  # pending, approved, rejected
+        "crypto_only": country_code in CRYPTO_ONLY_COUNTRIES,
+        "status": "pending",
         "submitted_at": datetime.now(timezone.utc).isoformat(),
         "reviewed_at": None,
         "reviewer_notes": None
     }
     await db.kyc_submissions.insert_one(kyc_record)
     
-    # Update provider with basic KYC level
+    # Update provider
     await db.providers.update_one(
         {"id": payload["user_id"]},
         {"$set": {
             "country": country_code,
             "kyc_status": "pending",
             "kyc_level": "basic",
-            "kyc_submission_id": kyc_record["id"]
+            "kyc_submission_id": kyc_record["id"],
+            "crypto_only": country_code in CRYPTO_ONLY_COUNTRIES
         }}
     )
     
@@ -1190,6 +1192,7 @@ async def submit_kyc(data: ProviderKYC, authorization: str = Header(None)):
         "message": "تم تقديم طلب التحقق بنجاح",
         "kyc_id": kyc_record["id"],
         "status": "pending",
+        "crypto_only": country_code in CRYPTO_ONLY_COUNTRIES,
         "estimated_review": "24-48 ساعة"
     }
 
