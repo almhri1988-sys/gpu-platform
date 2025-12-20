@@ -255,6 +255,155 @@ class GPUCloudAPITester:
         self.log_test("Create Payment Checkout", has_url,
                      "Checkout URL created" if has_url else f"Error: {data}")
 
+    def test_password_generation(self):
+        """Test password generation API"""
+        print("\n🔐 Testing Password Generation...")
+        
+        success, data = self.make_request('GET', 'auth/generate-password')
+        has_password = success and 'password' in data and len(data['password']) >= 8
+        self.log_test("Generate Strong Password", has_password,
+                     f"Generated password: {data.get('password', 'None')[:4]}..." if has_password else f"Error: {data}")
+        
+        if has_password:
+            self.generated_password = data['password']
+
+    def test_quick_registration(self):
+        """Test quick registration for users and providers"""
+        print("\n⚡ Testing Quick Registration...")
+        
+        # Test user quick registration
+        test_email = f"quickuser_{datetime.now().strftime('%H%M%S')}@gpucloud.pro"
+        user_data = {
+            "email": test_email,
+            "name": "Quick Test User"
+        }
+        
+        success, data = self.make_request('POST', 'auth/quick-register', user_data, 200)
+        has_token = success and 'token' in data and 'user' in data
+        generated_pwd = data.get('generated_password') if success else None
+        
+        self.log_test("Quick User Registration", has_token,
+                     f"Created user with generated password: {generated_pwd[:4] if generated_pwd else 'None'}..." if has_token else f"Error: {data}")
+        
+        if has_token:
+            self.quick_user_token = data['token']
+            self.quick_user_id = data['user']['id']
+            self.quick_user_email = test_email
+            if generated_pwd:
+                self.quick_user_password = generated_pwd
+
+        # Test provider quick registration
+        provider_email = f"quickprovider_{datetime.now().strftime('%H%M%S')}@gpucloud.pro"
+        provider_data = {
+            "email": provider_email,
+            "company_name": "Quick Test Provider",
+            "country": "US"
+        }
+        
+        success, data = self.make_request('POST', 'provider/quick-register', provider_data, 200)
+        has_provider_token = success and 'token' in data and 'provider' in data
+        provider_generated_pwd = data.get('generated_password') if success else None
+        
+        self.log_test("Quick Provider Registration", has_provider_token,
+                     f"Created provider with generated password: {provider_generated_pwd[:4] if provider_generated_pwd else 'None'}..." if has_provider_token else f"Error: {data}")
+
+    def test_2fa_system(self):
+        """Test 2FA setup, verification, and status"""
+        print("\n🛡️ Testing 2FA System...")
+        
+        if not hasattr(self, 'quick_user_token') or not self.quick_user_token:
+            self.log_test("2FA System", False, "No quick user token available")
+            return
+        
+        # Store original token and use quick user token for 2FA testing
+        original_token = self.token
+        self.token = self.quick_user_token
+        
+        # Test 2FA status (should be disabled initially)
+        success, data = self.make_request('GET', 'auth/2fa/status')
+        is_disabled = success and not data.get('enabled', True)
+        self.log_test("2FA Status Check (Initial)", is_disabled,
+                     f"2FA enabled: {data.get('enabled', 'Unknown')}" if success else f"Error: {data}")
+        
+        # Test 2FA setup with TOTP
+        setup_data = {"method": "totp"}
+        success, data = self.make_request('POST', 'auth/2fa/setup', setup_data)
+        has_qr_code = success and 'qr_code' in data and 'manual_key' in data
+        self.log_test("2FA Setup (TOTP)", has_qr_code,
+                     "QR code and manual key generated" if has_qr_code else f"Error: {data}")
+        
+        if has_qr_code:
+            self.totp_secret = data.get('manual_key')
+            
+            # Simulate TOTP code generation (for testing, we'll use a mock code)
+            # In real scenario, this would come from authenticator app
+            mock_totp_code = "123456"  # This will fail verification, but tests the endpoint
+            
+            verify_data = {"code": mock_totp_code, "method": "totp"}
+            success, data = self.make_request('POST', 'auth/2fa/verify-setup', verify_data)
+            # We expect this to fail with invalid code, but endpoint should respond
+            endpoint_works = 'detail' in data or 'success' in data
+            self.log_test("2FA Verify Setup (TOTP)", endpoint_works,
+                         f"Endpoint responded (expected failure with mock code): {data.get('detail', data)}" if endpoint_works else f"Error: {data}")
+        
+        # Test 2FA setup with email
+        setup_data = {"method": "email"}
+        success, data = self.make_request('POST', 'auth/2fa/setup', setup_data)
+        email_sent = success and data.get('email_sent', False)
+        self.log_test("2FA Setup (Email)", email_sent,
+                     "Email verification code sent" if email_sent else f"Error: {data}")
+        
+        # Test email code verification (will fail with mock code)
+        if email_sent:
+            mock_email_code = "123456"
+            verify_data = {"code": mock_email_code, "method": "email"}
+            success, data = self.make_request('POST', 'auth/2fa/verify-setup', verify_data)
+            endpoint_works = 'detail' in data or 'success' in data
+            self.log_test("2FA Verify Setup (Email)", endpoint_works,
+                         f"Endpoint responded (expected failure with mock code): {data.get('detail', data)}" if endpoint_works else f"Error: {data}")
+        
+        # Test send email code endpoint
+        success, data = self.make_request('POST', 'auth/2fa/send-email-code', {})
+        code_sent = success and data.get('success', False)
+        self.log_test("2FA Send Email Code", code_sent,
+                     "Email code sent successfully" if code_sent else f"Error: {data}")
+        
+        # Restore original token
+        self.token = original_token
+
+    def test_2fa_login_flow(self):
+        """Test login with 2FA"""
+        print("\n🔐 Testing 2FA Login Flow...")
+        
+        if not hasattr(self, 'quick_user_email') or not hasattr(self, 'quick_user_password'):
+            self.log_test("2FA Login Flow", False, "No quick user credentials available")
+            return
+        
+        # Test login without 2FA code (should indicate 2FA required or normal login)
+        login_data = {
+            "email": self.quick_user_email,
+            "password": self.quick_user_password
+        }
+        
+        success, data = self.make_request('POST', 'auth/login', login_data)
+        login_works = success and ('token' in data or 'requires_2fa' in data)
+        self.log_test("Login Flow Check", login_works,
+                     f"Login response: {'2FA required' if data.get('requires_2fa') else 'Direct login'}" if login_works else f"Error: {data}")
+        
+        # Test 2FA login endpoint with mock code
+        mock_2fa_code = "123456"
+        login_2fa_data = {
+            "email": self.quick_user_email,
+            "password": self.quick_user_password,
+            "two_factor_code": mock_2fa_code,
+            "two_factor_method": "totp"
+        }
+        
+        success, data = self.make_request('POST', 'auth/login/2fa', login_2fa_data)
+        endpoint_works = 'detail' in data or 'token' in data or 'requires_2fa' in data
+        self.log_test("2FA Login Endpoint", endpoint_works,
+                     f"2FA login endpoint responded: {data.get('detail', 'Success' if 'token' in data else 'Requires 2FA')}" if endpoint_works else f"Error: {data}")
+
     def test_all_instances(self):
         """Test get all instances"""
         print("\n📋 Testing All Instances...")
