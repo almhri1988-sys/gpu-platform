@@ -257,6 +257,17 @@ class ProviderCreate(BaseModel):
     company_name: str
     email: EmailStr
     password: str
+    country: str = ""
+
+class ProviderKYC(BaseModel):
+    full_name: str
+    country: str
+    id_type: str  # passport, national_id, drivers_license
+    id_number: str
+    id_document_url: str = ""  # URL to uploaded document
+    address: str
+    phone: str
+    tax_id: str = ""
 
 class GPUCreate(BaseModel):
     name: str
@@ -265,6 +276,102 @@ class GPUCreate(BaseModel):
     price_per_hour: float
     region: str
     specs: Dict = {}
+
+# ============== COUNTRIES & KYC SYSTEM ==============
+
+# الدول المدعومة للمزودين
+SUPPORTED_COUNTRIES = {
+    # الخليج والشرق الأوسط
+    "SA": {"name": "السعودية", "name_en": "Saudi Arabia", "currency": "SAR", "payout_methods": ["bank_transfer", "stc_pay"]},
+    "AE": {"name": "الإمارات", "name_en": "UAE", "currency": "AED", "payout_methods": ["bank_transfer", "paypal"]},
+    "KW": {"name": "الكويت", "name_en": "Kuwait", "currency": "KWD", "payout_methods": ["bank_transfer"]},
+    "QA": {"name": "قطر", "name_en": "Qatar", "currency": "QAR", "payout_methods": ["bank_transfer"]},
+    "BH": {"name": "البحرين", "name_en": "Bahrain", "currency": "BHD", "payout_methods": ["bank_transfer"]},
+    "OM": {"name": "عمان", "name_en": "Oman", "currency": "OMR", "payout_methods": ["bank_transfer"]},
+    "EG": {"name": "مصر", "name_en": "Egypt", "currency": "EGP", "payout_methods": ["bank_transfer", "vodafone_cash", "paypal"]},
+    "JO": {"name": "الأردن", "name_en": "Jordan", "currency": "JOD", "payout_methods": ["bank_transfer"]},
+    "LB": {"name": "لبنان", "name_en": "Lebanon", "currency": "USD", "payout_methods": ["crypto", "wise"]},
+    "IQ": {"name": "العراق", "name_en": "Iraq", "currency": "USD", "payout_methods": ["crypto", "wise"]},
+    
+    # أوروبا
+    "DE": {"name": "ألمانيا", "name_en": "Germany", "currency": "EUR", "payout_methods": ["bank_transfer", "paypal", "wise"]},
+    "FR": {"name": "فرنسا", "name_en": "France", "currency": "EUR", "payout_methods": ["bank_transfer", "paypal", "wise"]},
+    "GB": {"name": "بريطانيا", "name_en": "United Kingdom", "currency": "GBP", "payout_methods": ["bank_transfer", "paypal", "wise"]},
+    "NL": {"name": "هولندا", "name_en": "Netherlands", "currency": "EUR", "payout_methods": ["bank_transfer", "paypal", "wise"]},
+    "ES": {"name": "إسبانيا", "name_en": "Spain", "currency": "EUR", "payout_methods": ["bank_transfer", "paypal"]},
+    "IT": {"name": "إيطاليا", "name_en": "Italy", "currency": "EUR", "payout_methods": ["bank_transfer", "paypal"]},
+    "PL": {"name": "بولندا", "name_en": "Poland", "currency": "PLN", "payout_methods": ["bank_transfer", "wise"]},
+    "SE": {"name": "السويد", "name_en": "Sweden", "currency": "SEK", "payout_methods": ["bank_transfer", "wise"]},
+    "CH": {"name": "سويسرا", "name_en": "Switzerland", "currency": "CHF", "payout_methods": ["bank_transfer", "wise"]},
+    
+    # أمريكا
+    "US": {"name": "أمريكا", "name_en": "United States", "currency": "USD", "payout_methods": ["bank_transfer", "paypal", "payoneer", "wise"]},
+    "CA": {"name": "كندا", "name_en": "Canada", "currency": "CAD", "payout_methods": ["bank_transfer", "paypal", "wise"]},
+    "MX": {"name": "المكسيك", "name_en": "Mexico", "currency": "MXN", "payout_methods": ["bank_transfer", "paypal"]},
+    "BR": {"name": "البرازيل", "name_en": "Brazil", "currency": "BRL", "payout_methods": ["bank_transfer", "paypal"]},
+    
+    # آسيا
+    "IN": {"name": "الهند", "name_en": "India", "currency": "INR", "payout_methods": ["bank_transfer", "paypal", "payoneer"]},
+    "PK": {"name": "باكستان", "name_en": "Pakistan", "currency": "PKR", "payout_methods": ["bank_transfer", "payoneer", "crypto"]},
+    "BD": {"name": "بنغلاديش", "name_en": "Bangladesh", "currency": "BDT", "payout_methods": ["bank_transfer", "payoneer"]},
+    "PH": {"name": "الفلبين", "name_en": "Philippines", "currency": "PHP", "payout_methods": ["bank_transfer", "paypal", "payoneer"]},
+    "ID": {"name": "إندونيسيا", "name_en": "Indonesia", "currency": "IDR", "payout_methods": ["bank_transfer", "paypal"]},
+    "MY": {"name": "ماليزيا", "name_en": "Malaysia", "currency": "MYR", "payout_methods": ["bank_transfer", "paypal"]},
+    "SG": {"name": "سنغافورة", "name_en": "Singapore", "currency": "SGD", "payout_methods": ["bank_transfer", "paypal", "wise"]},
+    "JP": {"name": "اليابان", "name_en": "Japan", "currency": "JPY", "payout_methods": ["bank_transfer", "paypal"]},
+    "KR": {"name": "كوريا", "name_en": "South Korea", "currency": "KRW", "payout_methods": ["bank_transfer", "paypal"]},
+    "CN": {"name": "الصين", "name_en": "China", "currency": "CNY", "payout_methods": ["bank_transfer", "alipay"]},
+    "TW": {"name": "تايوان", "name_en": "Taiwan", "currency": "TWD", "payout_methods": ["bank_transfer", "paypal"]},
+    "VN": {"name": "فيتنام", "name_en": "Vietnam", "currency": "VND", "payout_methods": ["bank_transfer", "payoneer"]},
+    "TH": {"name": "تايلاند", "name_en": "Thailand", "currency": "THB", "payout_methods": ["bank_transfer", "paypal"]},
+    
+    # أفريقيا
+    "NG": {"name": "نيجيريا", "name_en": "Nigeria", "currency": "NGN", "payout_methods": ["bank_transfer", "paypal", "crypto"]},
+    "ZA": {"name": "جنوب أفريقيا", "name_en": "South Africa", "currency": "ZAR", "payout_methods": ["bank_transfer", "paypal"]},
+    "KE": {"name": "كينيا", "name_en": "Kenya", "currency": "KES", "payout_methods": ["bank_transfer", "mpesa", "paypal"]},
+    "MA": {"name": "المغرب", "name_en": "Morocco", "currency": "MAD", "payout_methods": ["bank_transfer"]},
+    "TN": {"name": "تونس", "name_en": "Tunisia", "currency": "TND", "payout_methods": ["bank_transfer"]},
+    "DZ": {"name": "الجزائر", "name_en": "Algeria", "currency": "DZD", "payout_methods": ["bank_transfer", "crypto"]},
+    
+    # أوقيانوسيا
+    "AU": {"name": "أستراليا", "name_en": "Australia", "currency": "AUD", "payout_methods": ["bank_transfer", "paypal", "wise"]},
+    "NZ": {"name": "نيوزيلندا", "name_en": "New Zealand", "currency": "NZD", "payout_methods": ["bank_transfer", "paypal", "wise"]},
+}
+
+# الدول المحظورة (عقوبات دولية)
+BLOCKED_COUNTRIES = {
+    "KP": "كوريا الشمالية",
+    "IR": "إيران",
+    "SY": "سوريا",
+    "CU": "كوبا",
+    "VE": "فنزويلا",
+    "RU": "روسيا",
+    "BY": "بيلاروسيا",
+    "MM": "ميانمار",
+    "SD": "السودان",
+    "AF": "أفغانستان",
+}
+
+# طرق السحب المتاحة
+PAYOUT_METHODS = {
+    "bank_transfer": {"name": "تحويل بنكي", "name_en": "Bank Transfer", "min": 50, "fee_percent": 1, "processing_days": "3-5"},
+    "paypal": {"name": "PayPal", "name_en": "PayPal", "min": 10, "fee_percent": 2.9, "processing_days": "1-2"},
+    "payoneer": {"name": "Payoneer", "name_en": "Payoneer", "min": 20, "fee_percent": 2, "processing_days": "1-3"},
+    "wise": {"name": "Wise", "name_en": "Wise", "min": 10, "fee_percent": 0.5, "processing_days": "1-2"},
+    "crypto": {"name": "عملات رقمية", "name_en": "Cryptocurrency", "min": 10, "fee_percent": 0, "processing_days": "instant", "currencies": ["USDT", "USDC", "BTC", "ETH"]},
+    "stc_pay": {"name": "STC Pay", "name_en": "STC Pay", "min": 10, "fee_percent": 0, "processing_days": "instant"},
+    "vodafone_cash": {"name": "فودافون كاش", "name_en": "Vodafone Cash", "min": 5, "fee_percent": 1, "processing_days": "instant"},
+    "mpesa": {"name": "M-Pesa", "name_en": "M-Pesa", "min": 5, "fee_percent": 1, "processing_days": "instant"},
+    "alipay": {"name": "Alipay", "name_en": "Alipay", "min": 10, "fee_percent": 1, "processing_days": "1-2"},
+}
+
+# KYC Verification Levels
+KYC_LEVELS = {
+    "none": {"max_payout": 0, "label": "غير موثق"},
+    "basic": {"max_payout": 500, "label": "أساسي"},      # Email + Phone verified
+    "verified": {"max_payout": 10000, "label": "موثق"},  # ID verified
+    "premium": {"max_payout": 100000, "label": "متميز"}, # Full KYC + Address proof
+}
 
 # GPU Performance Classification
 GPU_BENCHMARKS = {
