@@ -31,8 +31,163 @@ JWT_EXPIRATION_HOURS = 24
 # Stripe Config
 STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY', 'sk_test_emergent')
 
-# Create the main app
-app = FastAPI(title="GPU Cloud Pro API")
+# Background task flag
+background_task_running = False
+
+# ============== BACKGROUND AUTOMATION SYSTEM ==============
+
+async def auto_billing_and_health_loop():
+    """
+    نظام الأتمتة الكامل - يعمل كل 10 ثوانٍ:
+    1. فحص الرصيد وإيقاف الجلسات عند نفاده
+    2. فحص صحة GPUs وتنفيذ Failover تلقائي
+    3. تحديث التكاليف الحية
+    """
+    global background_task_running
+    background_task_running = True
+    
+    while background_task_running:
+        try:
+            await asyncio.sleep(10)  # كل 10 ثوانٍ
+            
+            # Get all running instances
+            running_instances = await db.instances.find({"status": "running"}, {"_id": 0}).to_list(1000)
+            
+            for instance in running_instances:
+                # Calculate current cost
+                started = datetime.fromisoformat(instance["started_at"])
+                duration = (datetime.now(timezone.utc) - started).total_seconds()
+                current_cost = duration * instance["price_per_second"]
+                
+                # Get user balance
+                user = await db.users.find_one({"id": instance["user_id"]}, {"_id": 0})
+                if not user:
+                    continue
+                
+                balance = user.get("balance", 0)
+                
+                # === 1. إيقاف تلقائي عند نفاد الرصيد ===
+                if current_cost >= balance:
+                    await auto_stop_instance(instance, "نفاد الرصيد - إيقاف تلقائي")
+                    continue
+                
+                # === 2. تحذير عند اقتراب نفاد الرصيد (80%) ===
+                if current_cost >= balance * 0.8:
+                    await send_low_balance_warning(instance, user, balance, current_cost)
+                
+                # === 3. فحص صحة GPU ===
+                health = await check_gpu_health(instance["gpu_id"])
+                if health.get("needs_failover"):
+                    await execute_failover(
+                        instance["id"],
+                        f"فحص تلقائي: {', '.join(health.get('issues', ['أداء منخفض']))}"
+                    )
+            
+        except Exception as e:
+            logging.error(f"Background task error: {e}")
+            await asyncio.sleep(5)
+
+async def auto_stop_instance(instance: dict, reason: str):
+    """إيقاف الجلسة تلقائياً"""
+    stopped = datetime.now(timezone.utc)
+    started = datetime.fromisoformat(instance["started_at"])
+    duration_seconds = (stopped - started).total_seconds()
+    total_cost = duration_seconds * instance["price_per_second"]
+    
+    # Update instance
+    await db.instances.update_one(
+        {"id": instance["id"]},
+        {"$set": {
+            "status": "stopped",
+            "stopped_at": stopped.isoformat(),
+            "total_cost": round(total_cost, 4),
+            "stop_reason": reason
+        }}
+    )
+    
+    # Get user and deduct balance
+    user = await db.users.find_one({"id": instance["user_id"]})
+    if user:
+        new_balance = max(0, user["balance"] - total_cost)
+        await db.users.update_one({"id": user["id"]}, {"$set": {"balance": new_balance}})
+        
+        # Distribute revenue
+        await distribute_revenue(instance, total_cost)
+    
+    # Free GPU
+    await db.gpus.update_one({"id": instance["gpu_id"]}, {"$set": {"status": "available"}})
+    
+    # Create notification
+    notification = {
+        "id": str(uuid.uuid4()),
+        "user_id": instance["user_id"],
+        "type": "auto_stop",
+        "title": "تم إيقاف الجلسة تلقائياً",
+        "message": f"تم إيقاف جلسة {instance['gpu_name']} - السبب: {reason}. التكلفة: ${total_cost:.4f}",
+        "read": False,
+        "created_at": stopped.isoformat()
+    }
+    await db.notifications.insert_one(notification)
+    
+    # Create invoice
+    invoice = {
+        "id": str(uuid.uuid4()),
+        "user_id": instance["user_id"],
+        "instance_id": instance["id"],
+        "gpu_name": instance["gpu_name"],
+        "duration_seconds": int(duration_seconds),
+        "total_cost": round(total_cost, 4),
+        "stop_reason": reason,
+        "created_at": stopped.isoformat()
+    }
+    await db.invoices.insert_one(invoice)
+    
+    logging.info(f"Auto-stopped instance {instance['id']}: {reason}")
+
+async def send_low_balance_warning(instance: dict, user: dict, balance: float, current_cost: float):
+    """إرسال تحذير عند اقتراب نفاد الرصيد"""
+    # Check if warning already sent in last hour
+    existing = await db.notifications.find_one({
+        "user_id": user["id"],
+        "type": "low_balance_warning",
+        "instance_id": instance["id"],
+        "created_at": {"$gte": (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()}
+    })
+    
+    if existing:
+        return  # Already warned
+    
+    remaining = balance - current_cost
+    estimated_minutes = (remaining / instance["price_per_second"]) / 60
+    
+    notification = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "instance_id": instance["id"],
+        "type": "low_balance_warning",
+        "title": "⚠️ تحذير: رصيدك على وشك النفاد",
+        "message": f"رصيدك المتبقي ${remaining:.2f} يكفي لـ {estimated_minutes:.0f} دقيقة فقط. أضف رصيداً لتجنب إيقاف جلسة {instance['gpu_name']}",
+        "read": False,
+        "urgent": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.notifications.insert_one(notification)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup and shutdown events"""
+    # Startup: Start background task
+    task = asyncio.create_task(auto_billing_and_health_loop())
+    logging.info("🚀 Background automation system started")
+    yield
+    # Shutdown: Stop background task
+    global background_task_running
+    background_task_running = False
+    task.cancel()
+    logging.info("🛑 Background automation system stopped")
+
+# Create the main app with lifespan
+app = FastAPI(title="GPU Cloud Pro API", lifespan=lifespan)
 api_router = APIRouter(prefix="/api")
 
 # ============== MODELS ==============
