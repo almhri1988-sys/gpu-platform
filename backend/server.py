@@ -1612,6 +1612,175 @@ async def request_payout(data: PayoutRequest, authorization: str = Header(None))
         "estimated_processing": payout["processing_days"]
     }
 
+# ============== إعدادات السحب للمزود ==============
+
+class AutoPayoutSettings(BaseModel):
+    enabled: bool = False
+    threshold: float = 100  # الحد الأدنى للسحب التلقائي
+    method: str = "crypto"
+    crypto_currency: str = "USDT"
+    crypto_wallet: str = ""
+    crypto_network: str = "TRC20"
+
+@api_router.post("/provider/payout/settings")
+async def update_payout_settings(data: AutoPayoutSettings, authorization: str = Header(None)):
+    """تحديث إعدادات السحب - تلقائي أو يدوي"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = authorization.split(" ")[1]
+    payload = verify_token(token)
+    
+    await db.providers.update_one(
+        {"id": payload["user_id"]},
+        {"$set": {
+            "auto_payout": data.enabled,
+            "auto_payout_threshold": data.threshold,
+            "auto_payout_method": data.method,
+            "auto_payout_crypto_currency": data.crypto_currency,
+            "auto_payout_wallet": data.crypto_wallet,
+            "auto_payout_network": data.crypto_network
+        }}
+    )
+    
+    mode = "تلقائي" if data.enabled else "يدوي"
+    return {
+        "message": f"تم تحديث الإعدادات - السحب {mode}",
+        "auto_payout": data.enabled,
+        "threshold": data.threshold if data.enabled else None
+    }
+
+@api_router.get("/provider/payout/settings")
+async def get_payout_settings(authorization: str = Header(None)):
+    """الحصول على إعدادات السحب"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = authorization.split(" ")[1]
+    payload = verify_token(token)
+    
+    provider = await db.providers.find_one({"id": payload["user_id"]}, {"_id": 0})
+    if not provider:
+        raise HTTPException(status_code=404, detail="Provider not found")
+    
+    return {
+        "auto_payout": provider.get("auto_payout", False),
+        "threshold": provider.get("auto_payout_threshold", 100),
+        "method": provider.get("auto_payout_method", "crypto"),
+        "crypto_currency": provider.get("auto_payout_crypto_currency", "USDT"),
+        "wallet": provider.get("auto_payout_wallet", ""),
+        "network": provider.get("auto_payout_network", "TRC20"),
+        "pending_balance": provider.get("pending_payout", 0)
+    }
+
+# ============== سحب أرباح المنصة (للأدمن) ==============
+
+@api_router.get("/admin/platform-balance")
+async def get_platform_balance(authorization: str = Header(None)):
+    """رصيد أرباح المنصة (15%)"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = authorization.split(" ")[1]
+    payload = verify_token(token)
+    
+    user = await db.users.find_one({"id": payload["user_id"]})
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # حساب إجمالي أرباح المنصة
+    pipeline = [
+        {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+    ]
+    result = await db.platform_revenue.aggregate(pipeline).to_list(1)
+    total_revenue = result[0]["total"] if result else 0
+    
+    # المسحوب من أرباح المنصة
+    withdrawn_pipeline = [
+        {"$match": {"type": "platform_withdrawal", "status": "completed"}},
+        {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+    ]
+    withdrawn_result = await db.admin_withdrawals.aggregate(withdrawn_pipeline).to_list(1)
+    total_withdrawn = withdrawn_result[0]["total"] if withdrawn_result else 0
+    
+    available = total_revenue - total_withdrawn
+    
+    return {
+        "total_earned": round(total_revenue, 2),
+        "total_withdrawn": round(total_withdrawn, 2),
+        "available_balance": round(available, 2),
+        "fee_percent": PLATFORM_FEE_PERCENT
+    }
+
+class AdminWithdrawal(BaseModel):
+    amount: float
+    method: str  # bank, crypto, paypal
+    destination: str  # رقم الحساب أو المحفظة
+    notes: str = ""
+
+@api_router.post("/admin/withdraw")
+async def admin_withdraw(data: AdminWithdrawal, authorization: str = Header(None)):
+    """سحب أرباح المنصة - مرن جداً"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = authorization.split(" ")[1]
+    payload = verify_token(token)
+    
+    user = await db.users.find_one({"id": payload["user_id"]})
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # حساب الرصيد المتاح
+    pipeline = [{"$group": {"_id": None, "total": {"$sum": "$amount"}}}]
+    result = await db.platform_revenue.aggregate(pipeline).to_list(1)
+    total_revenue = result[0]["total"] if result else 0
+    
+    withdrawn_pipeline = [
+        {"$match": {"type": "platform_withdrawal", "status": "completed"}},
+        {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+    ]
+    withdrawn_result = await db.admin_withdrawals.aggregate(withdrawn_pipeline).to_list(1)
+    total_withdrawn = withdrawn_result[0]["total"] if withdrawn_result else 0
+    
+    available = total_revenue - total_withdrawn
+    
+    if data.amount > available:
+        raise HTTPException(status_code=400, detail=f"رصيد غير كافي. المتاح: ${available:.2f}")
+    
+    # تسجيل السحب
+    withdrawal = {
+        "id": str(uuid.uuid4()),
+        "admin_id": payload["user_id"],
+        "type": "platform_withdrawal",
+        "amount": data.amount,
+        "method": data.method,
+        "destination": data.destination,
+        "notes": data.notes,
+        "status": "completed",  # مباشر - بدون انتظار
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.admin_withdrawals.insert_one(withdrawal)
+    
+    return {
+        "message": "✅ تم سحب أرباح المنصة بنجاح",
+        "withdrawal_id": withdrawal["id"],
+        "amount": data.amount,
+        "method": data.method,
+        "new_balance": round(available - data.amount, 2)
+    }
+
+@api_router.get("/admin/withdrawals")
+async def get_admin_withdrawals(authorization: str = Header(None)):
+    """سجل سحوبات أرباح المنصة"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = authorization.split(" ")[1]
+    payload = verify_token(token)
+    
+    user = await db.users.find_one({"id": payload["user_id"]})
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    withdrawals = await db.admin_withdrawals.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return withdrawals
+
 @api_router.get("/provider/payouts")
 async def get_provider_payouts(authorization: str = Header(None)):
     """Get all payout requests"""
