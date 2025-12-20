@@ -957,12 +957,140 @@ async def provider_dashboard(authorization: str = Header(None)):
     
     gpus = await db.gpus.find({"provider_id": payload["user_id"]}, {"_id": 0}).to_list(100)
     
+    # Get earnings stats
+    transactions = await db.provider_transactions.find(
+        {"provider_id": payload["user_id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    total_earnings = sum(t.get("net_amount", 0) for t in transactions)
+    today_earnings = sum(
+        t.get("net_amount", 0) for t in transactions 
+        if t.get("created_at", "").startswith(datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+    )
+    
     return {
         "provider": {k: v for k, v in provider.items() if k != "password"},
         "gpus": gpus,
         "total_gpus": len(gpus),
-        "active_gpus": len([g for g in gpus if g["status"] == "in_use"])
+        "active_gpus": len([g for g in gpus if g["status"] == "in_use"]),
+        "earnings": {
+            "total": round(total_earnings, 2),
+            "today": round(today_earnings, 4),
+            "pending_payout": provider.get("pending_payout", 0),
+            "platform_fee_percent": PLATFORM_FEE_PERCENT
+        },
+        "recent_transactions": transactions[:10]
     }
+
+@api_router.get("/provider/earnings")
+async def get_provider_earnings(authorization: str = Header(None)):
+    """Get detailed earnings for provider"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = authorization.split(" ")[1]
+    payload = verify_token(token)
+    
+    provider = await db.providers.find_one({"id": payload["user_id"]}, {"_id": 0})
+    if not provider:
+        raise HTTPException(status_code=404, detail="Provider not found")
+    
+    # Get all transactions
+    transactions = await db.provider_transactions.find(
+        {"provider_id": payload["user_id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(1000)
+    
+    # Calculate stats
+    total_gross = sum(t.get("gross_amount", 0) for t in transactions)
+    total_fees = sum(t.get("platform_fee", 0) for t in transactions)
+    total_net = sum(t.get("net_amount", 0) for t in transactions)
+    
+    # Get payouts
+    payouts = await db.provider_payouts.find(
+        {"provider_id": payload["user_id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    total_withdrawn = sum(p.get("amount", 0) for p in payouts if p.get("status") == "completed")
+    
+    return {
+        "summary": {
+            "total_gross": round(total_gross, 2),
+            "total_platform_fees": round(total_fees, 2),
+            "total_net_earnings": round(total_net, 2),
+            "total_withdrawn": round(total_withdrawn, 2),
+            "available_balance": round(provider.get("pending_payout", 0), 2)
+        },
+        "transactions": transactions,
+        "payouts": payouts
+    }
+
+class PayoutRequest(BaseModel):
+    amount: float
+    method: str = "bank_transfer"  # bank_transfer, paypal, crypto
+    account_details: Dict = {}
+
+@api_router.post("/provider/payout/request")
+async def request_payout(data: PayoutRequest, authorization: str = Header(None)):
+    """Request a payout of earnings"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = authorization.split(" ")[1]
+    payload = verify_token(token)
+    
+    provider = await db.providers.find_one({"id": payload["user_id"]}, {"_id": 0})
+    if not provider:
+        raise HTTPException(status_code=404, detail="Provider not found")
+    
+    available = provider.get("pending_payout", 0)
+    if data.amount > available:
+        raise HTTPException(status_code=400, detail=f"Insufficient balance. Available: ${available:.2f}")
+    
+    if data.amount < 10:
+        raise HTTPException(status_code=400, detail="Minimum payout is $10")
+    
+    # Create payout request
+    payout = {
+        "id": str(uuid.uuid4()),
+        "provider_id": payload["user_id"],
+        "amount": data.amount,
+        "method": data.method,
+        "account_details": data.account_details,
+        "status": "pending",  # pending -> processing -> completed
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "processed_at": None
+    }
+    await db.provider_payouts.insert_one(payout)
+    
+    # Deduct from pending balance
+    await db.providers.update_one(
+        {"id": payload["user_id"]},
+        {"$inc": {"pending_payout": -data.amount}}
+    )
+    
+    return {
+        "message": "Payout request submitted",
+        "payout_id": payout["id"],
+        "amount": data.amount,
+        "status": "pending",
+        "estimated_processing": "1-3 business days"
+    }
+
+@api_router.get("/provider/payouts")
+async def get_provider_payouts(authorization: str = Header(None)):
+    """Get all payout requests"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = authorization.split(" ")[1]
+    payload = verify_token(token)
+    
+    payouts = await db.provider_payouts.find(
+        {"provider_id": payload["user_id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return payouts
 
 # ============== ADMIN ROUTES ==============
 
