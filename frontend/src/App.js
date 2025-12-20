@@ -1509,6 +1509,357 @@ const BillingPage = () => {
   );
 };
 
+// ============== PROVIDER DASHBOARD ==============
+const ProviderLoginPage = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await axios.post(`${API}/provider/login`, { email, password });
+      localStorage.setItem("provider_token", res.data.token);
+      toast.success("تم تسجيل الدخول بنجاح");
+      navigate("/provider/dashboard");
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "فشل تسجيل الدخول");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen gradient-mesh flex items-center justify-center px-4">
+      <Card className="w-full max-w-md gpu-card">
+        <CardHeader className="text-center">
+          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#00FF88] to-[#00CC6A] flex items-center justify-center mx-auto mb-4">
+            <Server className="w-6 h-6 text-[#0A0A0F]" />
+          </div>
+          <CardTitle className="text-2xl">لوحة المزودين</CardTitle>
+          <CardDescription>سجل دخول لإدارة كروتك</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label>البريد الإلكتروني</Label>
+              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label>كلمة المرور</Label>
+              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            </div>
+            <Button type="submit" className="w-full bg-[#00FF88] hover:bg-[#00CC6A] text-black" disabled={loading}>
+              {loading ? "جاري التحميل..." : "دخول"}
+            </Button>
+          </form>
+          <div className="mt-4 text-center text-sm text-[#8B8B9E]">
+            بيانات التجربة: provider@gpucloud.pro / demo123
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const ProviderDashboard = () => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const token = localStorage.getItem("provider_token");
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/provider/login");
+      return;
+    }
+    fetchData();
+  }, [token]);
+
+  const fetchData = async () => {
+    try {
+      const res = await axios.get(`${API}/provider/dashboard`, { headers: { Authorization: `Bearer ${token}` } });
+      setData(res.data);
+    } catch (e) {
+      toast.error("فشل تحميل البيانات");
+      navigate("/provider/login");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#0A0A0F]"><div className="spinner"></div></div>;
+
+  return (
+    <div className="min-h-screen bg-[#0A0A0F] p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#00FF88] to-[#00CC6A] flex items-center justify-center">
+              <Server className="w-6 h-6 text-[#0A0A0F]" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">{data?.provider?.company_name}</h1>
+              <p className="text-[#8B8B9E]">لوحة تحكم المزود</p>
+            </div>
+          </div>
+          <Button variant="outline" onClick={() => { localStorage.removeItem("provider_token"); navigate("/"); }}>
+            <LogOut className="w-4 h-4 mr-2" /> خروج
+          </Button>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="gpu-card">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-[#00FF88]/10 flex items-center justify-center">
+                  <DollarSign className="w-6 h-6 text-[#00FF88]" />
+                </div>
+                <div>
+                  <p className="text-[#8B8B9E] text-sm">إجمالي الأرباح</p>
+                  <p className="text-2xl font-bold text-[#00FF88]">${data?.earnings?.total?.toFixed(2)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="gpu-card">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-[#00D4FF]/10 flex items-center justify-center">
+                  <Wallet className="w-6 h-6 text-[#00D4FF]" />
+                </div>
+                <div>
+                  <p className="text-[#8B8B9E] text-sm">رصيد قابل للسحب</p>
+                  <p className="text-2xl font-bold text-[#00D4FF]">${data?.earnings?.pending_payout?.toFixed(4)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="gpu-card">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-[#FFB800]/10 flex items-center justify-center">
+                  <Server className="w-6 h-6 text-[#FFB800]" />
+                </div>
+                <div>
+                  <p className="text-[#8B8B9E] text-sm">إجمالي GPUs</p>
+                  <p className="text-2xl font-bold">{data?.total_gpus}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="gpu-card">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-[#FF4757]/10 flex items-center justify-center">
+                  <Activity className="w-6 h-6 text-[#FF4757]" />
+                </div>
+                <div>
+                  <p className="text-[#8B8B9E] text-sm">كروت نشطة</p>
+                  <p className="text-2xl font-bold">{data?.active_gpus}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Revenue Info */}
+        <Card className="gpu-card neon-border">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">توزيع الأرباح</h3>
+                <p className="text-[#8B8B9E]">تحصل على <span className="text-[#00FF88] font-bold">85%</span> من كل معاملة</p>
+                <p className="text-[#8B8B9E] text-sm">عمولة المنصة: {data?.earnings?.platform_fee_percent}%</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-[#8B8B9E]">أرباح اليوم</p>
+                <p className="text-3xl font-bold text-[#00FF88]">${data?.earnings?.today?.toFixed(4)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* GPUs List */}
+        <Card className="gpu-card">
+          <CardHeader>
+            <CardTitle>كروتك المسجلة</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {data?.gpus?.map((gpu) => (
+                <div key={gpu.id} className="p-4 rounded-lg bg-[#0A0A0F] border border-[#1E1E2E] flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`status-dot ${gpu.status === 'available' ? 'available' : gpu.status === 'in_use' ? 'in-use' : 'offline'}`}></div>
+                    <div>
+                      <p className="font-semibold">{gpu.name}</p>
+                      <p className="text-sm text-[#8B8B9E]">{gpu.region} • {gpu.vram}GB VRAM</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-mono text-[#00D4FF]">${gpu.price_per_hour}/hr</p>
+                    <Badge className={gpu.status === 'available' ? 'bg-[#00FF88]/10 text-[#00FF88]' : gpu.status === 'in_use' ? 'bg-[#FFB800]/10 text-[#FFB800]' : 'bg-[#8B8B9E]/10 text-[#8B8B9E]'}>
+                      {gpu.status === 'available' ? 'متاح' : gpu.status === 'in_use' ? 'مستأجر' : 'صيانة'}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Transactions */}
+        <Card className="gpu-card">
+          <CardHeader>
+            <CardTitle>آخر المعاملات</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {data?.recent_transactions?.length === 0 ? (
+              <p className="text-center text-[#8B8B9E] py-8">لا توجد معاملات بعد</p>
+            ) : (
+              <div className="space-y-2">
+                {data?.recent_transactions?.map((t) => (
+                  <div key={t.id} className="flex items-center justify-between p-3 rounded-lg bg-[#0A0A0F]">
+                    <div>
+                      <p className="text-sm">{t.gpu_name}</p>
+                      <p className="text-xs text-[#8B8B9E]">{new Date(t.created_at).toLocaleString('ar')}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[#00FF88] font-mono">+${t.net_amount?.toFixed(4)}</p>
+                      <p className="text-xs text-[#8B8B9E]">من ${t.gross_amount?.toFixed(4)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+// ============== ADMIN DASHBOARD ==============
+const AdminDashboard = () => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const res = await axios.get(`${API}/admin/stats`, { headers: { Authorization: `Bearer ${token}` } });
+      setData(res.data);
+    } catch (e) {
+      toast.error("غير مصرح - تحتاج صلاحيات الأدمن");
+      navigate("/dashboard");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="spinner"></div></div>;
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div>
+        <h1 className="text-2xl font-bold">لوحة الإدارة</h1>
+        <p className="text-[#8B8B9E]">إحصائيات المنصة والإيرادات</p>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="gpu-card">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-lg bg-[#00D4FF]/10 flex items-center justify-center">
+                <Users className="w-6 h-6 text-[#00D4FF]" />
+              </div>
+              <div>
+                <p className="text-[#8B8B9E] text-sm">المستخدمين</p>
+                <p className="text-2xl font-bold">{data?.total_users}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="gpu-card">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-lg bg-[#00FF88]/10 flex items-center justify-center">
+                <Server className="w-6 h-6 text-[#00FF88]" />
+              </div>
+              <div>
+                <p className="text-[#8B8B9E] text-sm">المزودين</p>
+                <p className="text-2xl font-bold">{data?.total_providers}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="gpu-card">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-lg bg-[#FFB800]/10 flex items-center justify-center">
+                <Cpu className="w-6 h-6 text-[#FFB800]" />
+              </div>
+              <div>
+                <p className="text-[#8B8B9E] text-sm">GPUs</p>
+                <p className="text-2xl font-bold">{data?.total_gpus}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="gpu-card">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-lg bg-[#FF4757]/10 flex items-center justify-center">
+                <Activity className="w-6 h-6 text-[#FF4757]" />
+              </div>
+              <div>
+                <p className="text-[#8B8B9E] text-sm">جلسات نشطة</p>
+                <p className="text-2xl font-bold">{data?.active_instances}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Revenue */}
+      <Card className="gpu-card neon-border">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-[#00FF88]" />
+            إيرادات المنصة
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-4 rounded-lg bg-[#0A0A0F]">
+              <p className="text-[#8B8B9E] text-sm mb-1">إجمالي المعاملات</p>
+              <p className="text-2xl font-bold">${data?.revenue?.total_transactions?.toFixed(4)}</p>
+            </div>
+            <div className="p-4 rounded-lg bg-[#0A0A0F]">
+              <p className="text-[#8B8B9E] text-sm mb-1">عمولة المنصة ({data?.revenue?.fee_percent}%)</p>
+              <p className="text-2xl font-bold text-[#00FF88]">${data?.revenue?.platform_fees?.toFixed(4)}</p>
+            </div>
+            <div className="p-4 rounded-lg bg-[#0A0A0F]">
+              <p className="text-[#8B8B9E] text-sm mb-1">حصة المزودين (85%)</p>
+              <p className="text-2xl font-bold text-[#00D4FF]">${data?.revenue?.provider_share?.toFixed(4)}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 // Main App
 function App() {
   useEffect(() => {
@@ -1524,6 +1875,8 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/provider/login" element={<ProviderLoginPage />} />
+          <Route path="/provider/dashboard" element={<ProviderDashboard />} />
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <DashboardLayout><DashboardHome /></DashboardLayout>
@@ -1542,6 +1895,11 @@ function App() {
           <Route path="/billing" element={
             <ProtectedRoute>
               <DashboardLayout><BillingPage /></DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <DashboardLayout><AdminDashboard /></DashboardLayout>
             </ProtectedRoute>
           } />
         </Routes>
