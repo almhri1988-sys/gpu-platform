@@ -84,6 +84,52 @@ def generate_api_key() -> str:
     """توليد API Key للمزودين"""
     return f"gpu_{''.join(secrets.token_urlsafe(32))}"
 
+def generate_strong_password(length: int = 12) -> str:
+    """توليد كلمة مرور قوية وسهلة التذكر"""
+    import string
+    # كلمات سهلة التذكر
+    words = ["cloud", "gpu", "power", "fast", "pro", "tech", "data", "smart", "mega", "ultra", "super", "max"]
+    word = secrets.choice(words).capitalize()
+    numbers = ''.join(secrets.choice(string.digits) for _ in range(3))
+    symbols = secrets.choice("!@#$%")
+    letters = ''.join(secrets.choice(string.ascii_letters) for _ in range(3))
+    return f"{word}{numbers}{symbols}{letters}"
+
+def generate_totp_secret() -> str:
+    """توليد سر TOTP للمصادقة الثنائية"""
+    return pyotp.random_base32()
+
+def verify_totp_code(secret: str, code: str) -> bool:
+    """التحقق من رمز TOTP"""
+    totp = pyotp.TOTP(secret)
+    return totp.verify(code, valid_window=1)  # نافذة 30 ثانية للمرونة
+
+def generate_totp_qrcode(secret: str, email: str) -> str:
+    """توليد رمز QR للمصادقة الثنائية"""
+    totp = pyotp.TOTP(secret)
+    uri = totp.provisioning_uri(name=email, issuer_name="GPU Cloud Pro")
+    
+    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    qr.add_data(uri)
+    qr.make(fit=True)
+    
+    img = qr.make_image(fill_color="black", back_color="white")
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    buffer.seek(0)
+    
+    return base64.b64encode(buffer.getvalue()).decode()
+
+def generate_email_code() -> str:
+    """توليد رمز تحقق للبريد الإلكتروني"""
+    return ''.join(secrets.choice('0123456789') for _ in range(6))
+
+async def send_verification_email(email: str, code: str):
+    """إرسال رمز التحقق عبر البريد - يتم طباعته حالياً (يمكن ربطه بخدمة بريد لاحقاً)"""
+    logging.info(f"📧 رمز التحقق للبريد {email}: {code}")
+    # في الإنتاج، استخدم خدمة بريد مثل SendGrid أو AWS SES
+    return True
+
 async def log_security_event(event_type: str, user_id: str, details: dict, ip: str = None):
     """تسجيل الأحداث الأمنية"""
     event = {
