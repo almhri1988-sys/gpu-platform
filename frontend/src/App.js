@@ -590,6 +590,9 @@ const DashboardLayout = ({ children }) => {
             </Button>
 
             <div className="flex items-center gap-4 ml-auto">
+              {/* Notifications Bell */}
+              <NotificationBell token={token} />
+              
               <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#12121A] border border-[#1E1E2E]">
                 <Wallet className="w-4 h-4 text-[#00D4FF]" />
                 <span className="font-mono font-semibold text-[#00D4FF]" data-testid="balance-display">
