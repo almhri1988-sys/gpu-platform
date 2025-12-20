@@ -151,7 +151,12 @@ const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const res = await axios.post(`${API}/auth/login`, { email, password });
+    // التحقق من 2FA
+    if (res.data.requires_2fa) {
+      return res.data; // سيعالج في LoginPage
+    }
     localStorage.setItem("token", res.data.token);
+    localStorage.setItem("user", JSON.stringify(res.data.user));
     setToken(res.data.token);
     setUser(res.data.user);
     return res.data;
@@ -160,6 +165,7 @@ const AuthProvider = ({ children }) => {
   const register = async (email, password, name) => {
     const res = await axios.post(`${API}/auth/register`, { email, password, name });
     localStorage.setItem("token", res.data.token);
+    localStorage.setItem("user", JSON.stringify(res.data.user));
     setToken(res.data.token);
     setUser(res.data.user);
     return res.data;
