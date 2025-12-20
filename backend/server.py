@@ -13,6 +13,12 @@ import hashlib
 import jwt
 import asyncio
 from contextlib import asynccontextmanager
+import bcrypt
+import secrets
+import re
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
 
 ROOT_DIR = Path(__file__).parent
@@ -24,12 +30,84 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # JWT Config
-JWT_SECRET = os.environ.get('JWT_SECRET', 'gpu_cloud_pro_secret_key_2024')
+JWT_SECRET = os.environ.get('JWT_SECRET', secrets.token_urlsafe(32))
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
 
 # Stripe Config
 STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY', 'sk_test_emergent')
+
+# Rate Limiter - حماية من الهجمات
+limiter = Limiter(key_func=get_remote_address)
+
+# ============== SECURITY HELPERS ==============
+
+def hash_password_secure(password: str) -> str:
+    """تشفير كلمة المرور باستخدام bcrypt"""
+    salt = bcrypt.gensalt(rounds=12)
+    return bcrypt.hashpw(password.encode(), salt).decode()
+
+def verify_password_secure(password: str, hashed: str) -> bool:
+    """التحقق من كلمة المرور"""
+    try:
+        # للتوافق مع كلمات المرور القديمة (SHA256)
+        if len(hashed) == 64:  # SHA256 hash
+            return hashlib.sha256(password.encode()).hexdigest() == hashed
+        return bcrypt.checkpw(password.encode(), hashed.encode())
+    except:
+        return False
+
+def validate_password_strength(password: str) -> tuple:
+    """التحقق من قوة كلمة المرور"""
+    errors = []
+    if len(password) < 8:
+        errors.append("كلمة المرور يجب أن تكون 8 أحرف على الأقل")
+    if not re.search(r"[A-Z]", password):
+        errors.append("يجب أن تحتوي على حرف كبير")
+    if not re.search(r"[a-z]", password):
+        errors.append("يجب أن تحتوي على حرف صغير")
+    if not re.search(r"\d", password):
+        errors.append("يجب أن تحتوي على رقم")
+    return len(errors) == 0, errors
+
+def mask_sensitive_data(data: str, visible_chars: int = 4) -> str:
+    """إخفاء البيانات الحساسة"""
+    if len(data) <= visible_chars:
+        return "*" * len(data)
+    return data[:visible_chars] + "*" * (len(data) - visible_chars)
+
+def generate_api_key() -> str:
+    """توليد API Key للمزودين"""
+    return f"gpu_{''.join(secrets.token_urlsafe(32))}"
+
+async def log_security_event(event_type: str, user_id: str, details: dict, ip: str = None):
+    """تسجيل الأحداث الأمنية"""
+    event = {
+        "id": str(uuid.uuid4()),
+        "type": event_type,
+        "user_id": user_id,
+        "ip_address": ip,
+        "details": details,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.security_logs.insert_one(event)
+
+async def check_brute_force(ip: str, user_id: str = None) -> bool:
+    """فحص محاولات الاختراق"""
+    one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+    
+    # فحص محاولات تسجيل الدخول الفاشلة
+    query = {
+        "type": "login_failed",
+        "timestamp": {"$gte": one_hour_ago}
+    }
+    if ip:
+        query["ip_address"] = ip
+    if user_id:
+        query["user_id"] = user_id
+    
+    failed_attempts = await db.security_logs.count_documents(query)
+    return failed_attempts >= 5  # حظر بعد 5 محاولات فاشلة
 
 # Background task flag
 background_task_running = False
