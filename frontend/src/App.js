@@ -1056,57 +1056,6 @@ const DashboardLayout = ({ children }) => {
     </div>
   );
 };
-          </nav>
-
-          <div className="p-4 border-t border-[#1E1E2E]">
-            <Link to="/provider/login" className="block">
-              <Button variant="outline" className="w-full">
-                <Server className="w-4 h-4 ml-2" />
-                دخول كمزود GPU
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        {/* Top Bar */}
-        <header className="sticky top-0 z-30 bg-[#0A0A0F]/80 backdrop-blur-xl border-b border-[#1E1E2E]">
-          <div className="flex items-center justify-between h-16 px-4">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden"
-                onClick={() => setSidebarOpen(true)}
-              >
-                <Menu className="w-6 h-6" />
-              </Button>
-              <h1 className="text-xl font-bold hidden sm:block">GPU Cloud Pro</h1>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button 
-                size="sm" 
-                className="btn-neon"
-                onClick={() => navigate("/billing")}
-              >
-                <Plus className="w-4 h-4 ml-1" />
-                شحن رصيد
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        {/* Page Content */}
-        <main className="flex-1 p-4 lg:p-8">
-          {children}
-        </main>
-      </div>
-    </div>
-  );
-};
 
 // Dashboard Home
 const DashboardHome = () => {
