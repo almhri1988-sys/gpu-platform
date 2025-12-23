@@ -7,7 +7,8 @@ import {
   LogOut, Menu, X, ChevronRight, Play, Square, 
   DollarSign, BarChart3, Settings, Users, Home,
   Plus, RefreshCw, CreditCard, FileText, AlertCircle, Bell,
-  Shield, Mail, Smartphone, Copy, Check, Eye, EyeOff, Sparkles
+  Shield, Mail, Smartphone, Copy, Check, Eye, EyeOff, Sparkles,
+  MessageSquare, Send, Bitcoin, Search, Monitor
 } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./components/ui/card";
@@ -25,6 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
 } from "./components/ui/dropdown-menu";
+import { Textarea } from "./components/ui/textarea";
 import "./App.css";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
