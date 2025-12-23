@@ -201,6 +201,76 @@ const AuthProvider = ({ children }) => {
   );
 };
 
+// Auth Callback - يعالج الرجوع من Google
+const AuthCallback = () => {
+  const { setAuthFromGoogle } = useAuth();
+  const navigate = useNavigate();
+  const hasProcessed = React.useRef(false);
+
+  useEffect(() => {
+    if (hasProcessed.current) return;
+    hasProcessed.current = true;
+
+    const processGoogleAuth = async () => {
+      try {
+        // استخراج session_id من URL
+        const hash = window.location.hash;
+        const sessionId = hash.split('session_id=')[1]?.split('&')[0];
+        
+        if (!sessionId) {
+          toast.error("فشل تسجيل الدخول");
+          navigate('/login');
+          return;
+        }
+
+        // جلب بيانات المستخدم من Emergent Auth
+        const response = await fetch('https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data', {
+          headers: { 'X-Session-ID': sessionId }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to get session data');
+        }
+
+        const data = await response.json();
+        
+        // حفظ/تحديث المستخدم في قاعدة البيانات
+        const backendRes = await axios.post(`${API}/auth/google`, {
+          email: data.email,
+          name: data.name,
+          picture: data.picture,
+          google_id: data.id
+        });
+
+        // تسجيل الدخول
+        setAuthFromGoogle(backendRes.data.user, backendRes.data.token);
+        
+        toast.success(`مرحباً ${data.name}! 🎉`);
+        
+        // تنظيف URL والانتقال للوحة التحكم
+        window.history.replaceState({}, '', '/dashboard');
+        navigate('/dashboard', { replace: true });
+        
+      } catch (error) {
+        console.error('Google auth error:', error);
+        toast.error("فشل تسجيل الدخول بجوجل");
+        navigate('/login');
+      }
+    };
+
+    processGoogleAuth();
+  }, []);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#0A0A0F]">
+      <div className="text-center">
+        <div className="spinner mb-4"></div>
+        <p className="text-[#8B8B9E]">جاري تسجيل الدخول...</p>
+      </div>
+    </div>
+  );
+};
+
 // Protected Route
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
