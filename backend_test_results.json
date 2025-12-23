@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-12-20T15:18:46.225486",
+  "timestamp": "2025-12-23T21:17:08.269675",
   "base_url": "https://gpucloud.preview.emergentagent.com",
   "summary": {
     "tests_run": 26,
@@ -12,157 +12,157 @@
       "test_name": "API Root Endpoint",
       "status": "PASSED",
       "details": "",
-      "timestamp": "2025-12-20T15:18:43.567033"
+      "timestamp": "2025-12-23T21:17:05.212757"
     },
     {
       "test_name": "Health Check Endpoint",
       "status": "PASSED",
       "details": "",
-      "timestamp": "2025-12-20T15:18:43.601443"
+      "timestamp": "2025-12-23T21:17:05.254018"
     },
     {
       "test_name": "Seed Data",
       "status": "PASSED",
       "details": "",
-      "timestamp": "2025-12-20T15:18:43.636972"
+      "timestamp": "2025-12-23T21:17:05.294883"
     },
     {
       "test_name": "Generate Strong Password",
       "status": "PASSED",
-      "details": "Generated password: Clou...",
-      "timestamp": "2025-12-20T15:18:43.669321"
+      "details": "Generated password: Pro4...",
+      "timestamp": "2025-12-23T21:17:05.333930"
     },
     {
       "test_name": "Quick User Registration",
       "status": "PASSED",
-      "details": "Created user with generated password: Ultr...",
-      "timestamp": "2025-12-20T15:18:43.928568"
+      "details": "Created user with generated password: Data...",
+      "timestamp": "2025-12-23T21:17:05.622566"
     },
     {
       "test_name": "Quick Provider Registration",
       "status": "PASSED",
-      "details": "Created provider with generated password: Data...",
-      "timestamp": "2025-12-20T15:18:44.192680"
+      "details": "Created provider with generated password: Powe...",
+      "timestamp": "2025-12-23T21:17:05.915543"
     },
     {
       "test_name": "User Registration",
       "status": "PASSED",
       "details": "",
-      "timestamp": "2025-12-20T15:18:44.456946"
+      "timestamp": "2025-12-23T21:17:06.188385"
     },
     {
       "test_name": "User Login",
       "status": "PASSED",
       "details": "",
-      "timestamp": "2025-12-20T15:18:44.492475"
+      "timestamp": "2025-12-23T21:17:06.227560"
     },
     {
       "test_name": "Get Current User",
       "status": "PASSED",
       "details": "",
-      "timestamp": "2025-12-20T15:18:44.531088"
+      "timestamp": "2025-12-23T21:17:06.270891"
     },
     {
       "test_name": "2FA Status Check (Initial)",
       "status": "PASSED",
       "details": "2FA enabled: False",
-      "timestamp": "2025-12-20T15:18:44.562023"
+      "timestamp": "2025-12-23T21:17:06.348649"
     },
     {
       "test_name": "2FA Setup (TOTP)",
       "status": "PASSED",
       "details": "QR code and manual key generated",
-      "timestamp": "2025-12-20T15:18:44.612826"
+      "timestamp": "2025-12-23T21:17:06.432601"
     },
     {
       "test_name": "2FA Verify Setup (TOTP)",
       "status": "PASSED",
       "details": "Endpoint responded (expected failure with mock code): \u0631\u0645\u0632 \u063a\u064a\u0631 \u0635\u062d\u064a\u062d",
-      "timestamp": "2025-12-20T15:18:44.642493"
+      "timestamp": "2025-12-23T21:17:06.471660"
     },
     {
       "test_name": "2FA Setup (Email)",
       "status": "PASSED",
       "details": "Email verification code sent",
-      "timestamp": "2025-12-20T15:18:44.687654"
+      "timestamp": "2025-12-23T21:17:06.524170"
     },
     {
       "test_name": "2FA Verify Setup (Email)",
       "status": "PASSED",
       "details": "Endpoint responded (expected failure with mock code): \u0631\u0645\u0632 \u063a\u064a\u0631 \u0635\u062d\u064a\u062d",
-      "timestamp": "2025-12-20T15:18:44.722982"
+      "timestamp": "2025-12-23T21:17:06.563477"
     },
     {
       "test_name": "2FA Send Email Code",
       "status": "PASSED",
       "details": "Email code sent successfully",
-      "timestamp": "2025-12-20T15:18:44.759089"
+      "timestamp": "2025-12-23T21:17:06.603238"
     },
     {
       "test_name": "Login Flow Check",
       "status": "PASSED",
       "details": "Login response: Direct login",
-      "timestamp": "2025-12-20T15:18:45.019125"
+      "timestamp": "2025-12-23T21:17:06.866966"
     },
     {
       "test_name": "2FA Login Endpoint",
       "status": "PASSED",
       "details": "2FA login endpoint responded: Success",
-      "timestamp": "2025-12-20T15:18:45.274388"
+      "timestamp": "2025-12-23T21:17:07.127298"
     },
     {
       "test_name": "Get All GPUs",
       "status": "PASSED",
       "details": "Found 8 GPUs",
-      "timestamp": "2025-12-20T15:18:45.313094"
+      "timestamp": "2025-12-23T21:17:07.164776"
     },
     {
       "test_name": "Get GPUs by Region",
       "status": "PASSED",
       "details": "Found 1 GPUs in US East",
-      "timestamp": "2025-12-20T15:18:45.343986"
+      "timestamp": "2025-12-23T21:17:07.206229"
     },
     {
       "test_name": "Get GPUs by Model",
       "status": "PASSED",
       "details": "Found 0 RTX 4090 GPUs",
-      "timestamp": "2025-12-20T15:18:45.379196"
+      "timestamp": "2025-12-23T21:17:07.242377"
     },
     {
       "test_name": "Get Regions",
       "status": "PASSED",
       "details": "Found 5 regions",
-      "timestamp": "2025-12-20T15:18:45.417148"
+      "timestamp": "2025-12-23T21:17:07.281841"
     },
     {
       "test_name": "Instance Management",
       "status": "FAILED",
       "details": "No GPU available for testing",
-      "timestamp": "2025-12-20T15:18:45.417163"
+      "timestamp": "2025-12-23T21:17:07.281862"
     },
     {
       "test_name": "Get All Instances",
       "status": "PASSED",
       "details": "Found 3 total instances",
-      "timestamp": "2025-12-20T15:18:45.449298"
+      "timestamp": "2025-12-23T21:17:07.322052"
     },
     {
       "test_name": "Get Transactions",
       "status": "PASSED",
       "details": "Found 2 transactions",
-      "timestamp": "2025-12-20T15:18:45.481232"
+      "timestamp": "2025-12-23T21:17:07.368049"
     },
     {
       "test_name": "Get Invoices",
       "status": "PASSED",
       "details": "Found 2 invoices",
-      "timestamp": "2025-12-20T15:18:45.515667"
+      "timestamp": "2025-12-23T21:17:07.414071"
     },
     {
       "test_name": "Create Payment Checkout",
       "status": "PASSED",
       "details": "Checkout URL created",
-      "timestamp": "2025-12-20T15:18:46.225455"
+      "timestamp": "2025-12-23T21:17:08.269643"
     }
   ],
   "failed_tests": [
