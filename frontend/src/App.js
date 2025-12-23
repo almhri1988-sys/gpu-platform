@@ -1056,24 +1056,12 @@ const DashboardLayout = ({ children }) => {
           </nav>
 
           <div className="p-4 border-t border-[#1E1E2E]">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00D4FF] to-[#0099CC] flex items-center justify-center text-[#0A0A0F] font-bold">
-                {user?.name?.charAt(0).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-medium truncate">{user?.name}</div>
-                <div className="text-sm text-[#8B8B9E] truncate">{user?.email}</div>
-              </div>
-            </div>
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-[#8B8B9E] hover:text-white"
-              onClick={() => { logout(); navigate("/"); }}
-              data-testid="logout-btn"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              تسجيل الخروج
-            </Button>
+            <Link to="/provider/login" className="block">
+              <Button variant="outline" className="w-full">
+                <Server className="w-4 h-4 ml-2" />
+                دخول كمزود GPU
+              </Button>
+            </Link>
           </div>
         </div>
       </aside>
@@ -1083,33 +1071,26 @@ const DashboardLayout = ({ children }) => {
         {/* Top Bar */}
         <header className="sticky top-0 z-30 bg-[#0A0A0F]/80 backdrop-blur-xl border-b border-[#1E1E2E]">
           <div className="flex items-center justify-between h-16 px-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu className="w-6 h-6" />
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <Menu className="w-6 h-6" />
+              </Button>
+              <h1 className="text-xl font-bold hidden sm:block">GPU Cloud Pro</h1>
+            </div>
 
-            <div className="flex items-center gap-4 ml-auto">
-              {/* Notifications Bell */}
-              <NotificationBell token={token} />
-              
-              <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#12121A] border border-[#1E1E2E]">
-                <Wallet className="w-4 h-4 text-[#00D4FF]" />
-                <span className="font-mono font-semibold text-[#00D4FF]" data-testid="balance-display">
-                  ${user?.balance?.toFixed(2) || "0.00"}
-                </span>
-              </div>
+            <div className="flex items-center gap-2">
               <Button 
                 size="sm" 
                 className="btn-neon"
                 onClick={() => navigate("/billing")}
-                data-testid="add-funds-btn"
               >
-                <Plus className="w-4 h-4 mr-1" />
-                شحن
+                <Plus className="w-4 h-4 ml-1" />
+                شحن رصيد
               </Button>
             </div>
           </div>
