@@ -171,6 +171,19 @@ const AuthProvider = ({ children }) => {
     return res.data;
   };
 
+  // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+  const loginWithGoogle = () => {
+    const redirectUrl = window.location.origin + '/dashboard';
+    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+  };
+
+  const setAuthFromGoogle = (userData, sessionToken) => {
+    localStorage.setItem("token", sessionToken);
+    localStorage.setItem("user", JSON.stringify(userData));
+    setToken(sessionToken);
+    setUser(userData);
+  };
+
   const logout = () => {
     localStorage.removeItem("token");
     setToken(null);
@@ -182,7 +195,7 @@ const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser, loginWithGoogle, setAuthFromGoogle }}>
       {children}
     </AuthContext.Provider>
   );
