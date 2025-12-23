@@ -2652,6 +2652,140 @@ const ProviderDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* نافذة إضافة GPU */}
+      <Dialog open={addGPUOpen} onOpenChange={setAddGPUOpen}>
+        <DialogContent className="bg-[#12121A] border-[#1E1E2E]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Cpu className="w-5 h-5 text-[#00D4FF]" />
+              إضافة كرت GPU
+            </DialogTitle>
+            <DialogDescription>سجل كرتك وابدأ بتحقيق الأرباح</DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* زر الاكتشاف التلقائي */}
+            <Button 
+              onClick={detectGPU} 
+              disabled={detecting}
+              className="w-full bg-[#00D4FF]/10 hover:bg-[#00D4FF]/20 text-[#00D4FF] border border-[#00D4FF]/30"
+            >
+              {detecting ? (
+                <>جاري الاكتشاف...</>
+              ) : (
+                <><Search className="w-4 h-4 mr-2" /> اكتشاف GPU تلقائياً</>
+              )}
+            </Button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[#1E1E2E]"></div>
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-[#12121A] px-2 text-[#8B8B9E]">أو أدخل يدوياً</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2 space-y-2">
+                <Label>اسم الكرت *</Label>
+                <Input 
+                  placeholder="مثال: NVIDIA RTX 4090" 
+                  value={gpuForm.name}
+                  onChange={(e) => setGpuForm({...gpuForm, name: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>الموديل</Label>
+                <Input 
+                  placeholder="RTX 4090" 
+                  value={gpuForm.model}
+                  onChange={(e) => setGpuForm({...gpuForm, model: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>VRAM (GB)</Label>
+                <Input 
+                  type="number" 
+                  placeholder="24" 
+                  value={gpuForm.vram}
+                  onChange={(e) => setGpuForm({...gpuForm, vram: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>السعر بالساعة ($) *</Label>
+                <Input 
+                  type="number" 
+                  step="0.01"
+                  placeholder="0.50" 
+                  value={gpuForm.price_per_hour}
+                  onChange={(e) => setGpuForm({...gpuForm, price_per_hour: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>المنطقة</Label>
+                <Select value={gpuForm.region} onValueChange={(v) => setGpuForm({...gpuForm, region: v})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر المنطقة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="US">أمريكا 🇺🇸</SelectItem>
+                    <SelectItem value="EU">أوروبا 🇪🇺</SelectItem>
+                    <SelectItem value="ASIA">آسيا 🌏</SelectItem>
+                    <SelectItem value="ME">الشرق الأوسط 🇸🇦</SelectItem>
+                    <SelectItem value="RU">روسيا 🇷🇺</SelectItem>
+                    <SelectItem value="CN">الصين 🇨🇳</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {gpuForm.price_per_hour && (
+              <div className="p-3 rounded-lg bg-[#00FF88]/10 border border-[#00FF88]/30">
+                <p className="text-sm text-[#00FF88]">
+                  💰 ستحصل على <strong>${(parseFloat(gpuForm.price_per_hour || 0) * 0.85).toFixed(2)}/ساعة</strong> (85% من السعر)
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddGPUOpen(false)}>إلغاء</Button>
+            <Button className="btn-neon" onClick={addGPU}>
+              <Plus className="w-4 h-4 mr-2" /> إضافة الكرت
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* نافذة الملاحظات */}
+      <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>
+        <DialogContent className="bg-[#12121A] border-[#1E1E2E]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-[#00D4FF]" />
+              إرسال ملاحظات للإدارة
+            </DialogTitle>
+            <DialogDescription>شاركنا أي ملاحظات أو اقتراحات</DialogDescription>
+          </DialogHeader>
+          
+          <Textarea 
+            placeholder="اكتب ملاحظتك هنا..."
+            value={feedbackText}
+            onChange={(e) => setFeedbackText(e.target.value)}
+            rows={5}
+            className="bg-[#0A0A0F] border-[#1E1E2E]"
+          />
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFeedbackOpen(false)}>إلغاء</Button>
+            <Button className="btn-neon" onClick={sendFeedback} disabled={sendingFeedback}>
+              {sendingFeedback ? "جاري الإرسال..." : <><Send className="w-4 h-4 mr-2" /> إرسال</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
