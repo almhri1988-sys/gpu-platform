@@ -1972,6 +1972,59 @@ async def login_provider(user: UserLogin):
     token = create_token(provider["id"], "provider")
     return {"token": token, "provider": {k: v for k, v in provider.items() if k != "password"}}
 
+# إضافة GPU جديد بسهولة
+class AddGPURequest(BaseModel):
+    name: str
+    model: str = ""
+    vram: str = ""
+    price_per_hour: float
+    region: str = ""
+
+@api_router.post("/provider/gpu/add")
+async def add_gpu_simple(data: AddGPURequest, authorization: str = Header(None)):
+    """إضافة GPU بطريقة بسيطة"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="غير مصرح")
+    token = authorization.split(" ")[1]
+    payload = verify_token(token)
+    
+    if payload["role"] != "provider":
+        raise HTTPException(status_code=403, detail="فقط المزودين يمكنهم إضافة GPUs")
+    
+    # حساب درجة الأداء تلقائياً
+    performance_score = 50
+    if 'RTX 4090' in data.name or 'H100' in data.name:
+        performance_score = 98
+    elif 'RTX 4080' in data.name or 'A100' in data.name:
+        performance_score = 95
+    elif 'RTX 4070' in data.name or 'RTX 3090' in data.name:
+        performance_score = 90
+    elif 'RTX 3080' in data.name:
+        performance_score = 85
+    elif 'RTX 3070' in data.name:
+        performance_score = 80
+    
+    vram_int = int(data.vram) if data.vram.isdigit() else 8
+    
+    gpu = {
+        "id": str(uuid.uuid4()),
+        "provider_id": payload["user_id"],
+        "name": data.name,
+        "model": data.model or data.name.split()[-1] if data.name else "GPU",
+        "vram": vram_int,
+        "price_per_hour": data.price_per_hour,
+        "price_per_second": round(data.price_per_hour / 3600, 8),
+        "region": data.region or "US",
+        "latency": 15 + hash(data.region or "US") % 30,
+        "status": "available",
+        "performance_score": performance_score,
+        "specs": {"cuda_cores": "auto", "memory_bandwidth": "auto"},
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.gpus.insert_one(gpu)
+    
+    return {"success": True, "gpu": {k: v for k, v in gpu.items() if k != "_id"}, "message": "تم إضافة الكرت بنجاح!"}
+
 @api_router.post("/provider/gpus")
 async def add_gpu(data: GPUCreate, authorization: str = Header(None)):
     if not authorization:
