@@ -920,67 +920,6 @@ const RegisterPage = () => {
     </div>
   );
 };
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={generatePassword}
-                  className="text-[#00D4FF] hover:text-[#00D4FF]/80 h-auto p-0 text-xs"
-                >
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  اقترح كلمة مرور
-                </Button>
-              </div>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  data-testid="register-password-input"
-                  className="pr-20"
-                />
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
-                  {password && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={copyPassword}
-                    >
-                      {copied ? <Check className="w-4 h-4 text-[#00FF88]" /> : <Copy className="w-4 h-4" />}
-                    </Button>
-                  )}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </Button>
-                </div>
-              </div>
-            </div>
-            <Button type="submit" className="w-full btn-neon" disabled={loading} data-testid="register-submit-btn">
-              {loading ? "جاري التحميل..." : "إنشاء حساب"}
-            </Button>
-          </form>
-          <div className="mt-6 text-center text-sm text-[#8B8B9E]">
-            لديك حساب بالفعل؟{" "}
-            <Link to="/login" className="text-[#00D4FF] hover:underline">
-              سجل دخول
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
 
 // Dashboard Layout
 const DashboardLayout = ({ children }) => {
