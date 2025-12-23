@@ -698,6 +698,38 @@ async def quick_register(data: QuickRegister):
         "message": "تم إنشاء حسابك بنجاح!" + (" احفظ كلمة المرور المُقترحة." if not data.password else "")
     }
 
+# === نسيت كلمة المرور ===
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+@api_router.post("/auth/forgot-password")
+async def forgot_password(data: ForgotPasswordRequest):
+    """إعادة تعيين كلمة المرور"""
+    user = await db.users.find_one({"email": data.email}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="البريد الإلكتروني غير مسجل")
+    
+    # توليد كلمة مرور جديدة
+    new_password = generate_strong_password()
+    
+    # تحديث كلمة المرور
+    await db.users.update_one(
+        {"email": data.email},
+        {"$set": {"password": hash_password_secure(new_password)}}
+    )
+    
+    # تسجيل الحدث الأمني
+    await log_security_event("password_reset", user["id"], {"email": data.email})
+    
+    # إرسال البريد (حالياً يتم تسجيله في logs)
+    await send_verification_email(data.email, f"كلمة المرور الجديدة: {new_password}")
+    
+    return {
+        "success": True,
+        "new_password": new_password,  # في الإنتاج: لا ترسل هذا، أرسله بالبريد فقط
+        "message": "تم إنشاء كلمة مرور جديدة"
+    }
+
 @api_router.post("/auth/register")
 async def register(user: UserCreate):
     existing = await db.users.find_one({"email": user.email})
