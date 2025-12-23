@@ -713,6 +713,7 @@ const LoginPage = () => {
 };
 
 const RegisterPage = () => {
+  const [showEmailRegister, setShowEmailRegister] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -720,7 +721,7 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState(null);
   const [copied, setCopied] = useState(false);
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   // توليد كلمة مرور مقترحة
