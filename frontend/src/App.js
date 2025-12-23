@@ -3075,6 +3075,7 @@ const AppRoutes = () => {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/provider/login" element={<ProviderLoginPage />} />
       <Route path="/provider/dashboard" element={<ProviderDashboard />} />
       <Route path="/dashboard" element={
