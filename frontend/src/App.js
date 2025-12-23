@@ -1004,21 +1004,18 @@ const RegisterPage = () => {
 
 // Dashboard Layout
 const DashboardLayout = ({ children }) => {
-  const { user, logout, token } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navItems = [
-    { path: "/dashboard", label: "الرئيسية", icon: Home },
     { path: "/marketplace", label: "سوق GPUs", icon: Server },
     { path: "/instances", label: "الجلسات", icon: Activity },
     { path: "/billing", label: "الفوترة", icon: Wallet },
-    { path: "/security", label: "الأمان", icon: Shield },
   ];
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] flex">
+    <div className="min-h-screen bg-[#0A0A0F] flex" dir="rtl">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div 
@@ -1029,13 +1026,13 @@ const DashboardLayout = ({ children }) => {
 
       {/* Sidebar */}
       <aside className={`
-        fixed lg:static inset-y-0 left-0 z-50
+        fixed lg:static inset-y-0 right-0 z-50
         w-64 sidebar transform transition-transform duration-300
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ${sidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
       `}>
         <div className="flex flex-col h-full">
           <div className="p-4 border-b border-[#1E1E2E]">
-            <Link to="/" className="flex items-center gap-3">
+            <Link to="/marketplace" className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#00D4FF] to-[#0099CC] flex items-center justify-center">
                 <Cpu className="w-6 h-6 text-[#0A0A0F]" />
               </div>
