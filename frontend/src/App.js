@@ -2639,45 +2639,93 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Toaster position="top-center" richColors theme="dark" />
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/provider/login" element={<ProviderLoginPage />} />
-          <Route path="/provider/dashboard" element={<ProviderDashboard />} />
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <DashboardLayout><DashboardHome /></DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/marketplace" element={
-            <ProtectedRoute>
-              <DashboardLayout><MarketplacePage /></DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/instances" element={
-            <ProtectedRoute>
-              <DashboardLayout><InstancesPage /></DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/billing" element={
-            <ProtectedRoute>
-              <DashboardLayout><BillingPage /></DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/security" element={
-            <ProtectedRoute>
-              <DashboardLayout><SecurityPage /></DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/admin" element={
-            <ProtectedRoute>
-              <DashboardLayout><AdminDashboard /></DashboardLayout>
-            </ProtectedRoute>
-          } />
-        </Routes>
+        <AppRoutes />
       </BrowserRouter>
     </AuthProvider>
+  );
+}
+
+// App Routes with Auth Callback handling
+const AppRoutes = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { setAuthFromGoogle } = useAuth();
+  const processedRef = React.useRef(false);
+
+  useEffect(() => {
+    // معالجة session_id من Google Auth
+    const hash = location.hash;
+    if (hash && hash.includes('session_id=') && !processedRef.current) {
+      processedRef.current = true;
+      const sessionId = hash.split('session_id=')[1]?.split('&')[0];
+      
+      if (sessionId) {
+        // جلب بيانات المستخدم
+        fetch('https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data', {
+          headers: { 'X-Session-ID': sessionId }
+        })
+        .then(res => res.json())
+        .then(async (data) => {
+          // حفظ المستخدم في قاعدة البيانات
+          const backendRes = await axios.post(`${API}/auth/google`, {
+            email: data.email,
+            name: data.name,
+            picture: data.picture,
+            google_id: data.id
+          });
+          
+          setAuthFromGoogle(backendRes.data.user, backendRes.data.token);
+          toast.success(`مرحباً ${data.name}! 🎉`);
+          window.history.replaceState({}, '', '/dashboard');
+          navigate('/dashboard', { replace: true });
+        })
+        .catch((err) => {
+          console.error('Google auth error:', err);
+          toast.error("فشل تسجيل الدخول");
+          navigate('/login');
+        });
+      }
+    }
+  }, [location.hash]);
+
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/provider/login" element={<ProviderLoginPage />} />
+      <Route path="/provider/dashboard" element={<ProviderDashboard />} />
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <DashboardLayout><DashboardHome /></DashboardLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/marketplace" element={
+        <ProtectedRoute>
+          <DashboardLayout><MarketplacePage /></DashboardLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/instances" element={
+        <ProtectedRoute>
+          <DashboardLayout><InstancesPage /></DashboardLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/billing" element={
+        <ProtectedRoute>
+          <DashboardLayout><BillingPage /></DashboardLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/security" element={
+        <ProtectedRoute>
+          <DashboardLayout><SecurityPage /></DashboardLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/admin" element={
+        <ProtectedRoute>
+          <DashboardLayout><AdminDashboard /></DashboardLayout>
+        </ProtectedRoute>
+      } />
+    </Routes>
   );
 }
 
