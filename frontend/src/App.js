@@ -2597,13 +2597,6 @@ const ProviderDashboard = () => {
                 <p className="text-sm text-[#8B8B9E]">أرباح اليوم</p>
                 <p className="text-3xl font-bold text-[#00FF88]">${data?.earnings?.today?.toFixed(4)}</p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* GPUs List */}
         <Card className="gpu-card">
           <CardHeader>
