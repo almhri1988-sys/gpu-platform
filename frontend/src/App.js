@@ -2337,6 +2337,18 @@ const ProviderLoginPage = () => {
 const ProviderDashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [addGPUOpen, setAddGPUOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [detecting, setDetecting] = useState(false);
+  const [gpuForm, setGpuForm] = useState({
+    name: '',
+    model: '',
+    vram: '',
+    price_per_hour: '',
+    region: ''
+  });
+  const [feedbackText, setFeedbackText] = useState('');
+  const [sendingFeedback, setSendingFeedback] = useState(false);
   const navigate = useNavigate();
   const token = localStorage.getItem("provider_token");
 
@@ -2360,6 +2372,121 @@ const ProviderDashboard = () => {
     }
   };
 
+  // اكتشاف GPU تلقائي عبر WebGL
+  const detectGPU = async () => {
+    setDetecting(true);
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      
+      if (gl) {
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        let renderer = 'Unknown GPU';
+        
+        if (debugInfo) {
+          renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+        }
+        
+        // تحليل اسم الكرت
+        let gpuName = renderer;
+        let vram = '8';
+        let model = '';
+        
+        // اكتشاف نوع الكرت
+        if (renderer.includes('RTX 4090')) {
+          gpuName = 'NVIDIA RTX 4090';
+          vram = '24';
+          model = 'RTX 4090';
+        } else if (renderer.includes('RTX 4080')) {
+          gpuName = 'NVIDIA RTX 4080';
+          vram = '16';
+          model = 'RTX 4080';
+        } else if (renderer.includes('RTX 4070')) {
+          gpuName = 'NVIDIA RTX 4070';
+          vram = '12';
+          model = 'RTX 4070';
+        } else if (renderer.includes('RTX 3090')) {
+          gpuName = 'NVIDIA RTX 3090';
+          vram = '24';
+          model = 'RTX 3090';
+        } else if (renderer.includes('RTX 3080')) {
+          gpuName = 'NVIDIA RTX 3080';
+          vram = '10';
+          model = 'RTX 3080';
+        } else if (renderer.includes('A100')) {
+          gpuName = 'NVIDIA A100';
+          vram = '80';
+          model = 'A100';
+        } else if (renderer.includes('H100')) {
+          gpuName = 'NVIDIA H100';
+          vram = '80';
+          model = 'H100';
+        } else if (renderer.includes('AMD') || renderer.includes('Radeon')) {
+          gpuName = renderer;
+          model = 'AMD';
+        }
+        
+        setGpuForm(prev => ({
+          ...prev,
+          name: gpuName,
+          model: model || gpuName.split(' ').pop(),
+          vram: vram
+        }));
+        
+        toast.success(`تم اكتشاف: ${gpuName}`);
+      } else {
+        toast.error("لم نتمكن من اكتشاف GPU - أدخل البيانات يدوياً");
+      }
+    } catch (e) {
+      toast.error("فشل الاكتشاف التلقائي");
+    } finally {
+      setDetecting(false);
+    }
+  };
+
+  const addGPU = async () => {
+    if (!gpuForm.name || !gpuForm.price_per_hour) {
+      toast.error("أدخل اسم الكرت والسعر");
+      return;
+    }
+    
+    try {
+      await axios.post(`${API}/provider/gpu/add`, gpuForm, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success("تم إضافة الكرت بنجاح! 🎉");
+      setAddGPUOpen(false);
+      setGpuForm({ name: '', model: '', vram: '', price_per_hour: '', region: '' });
+      fetchData();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "فشل إضافة الكرت");
+    }
+  };
+
+  const sendFeedback = async () => {
+    if (!feedbackText.trim()) {
+      toast.error("اكتب ملاحظتك");
+      return;
+    }
+    
+    setSendingFeedback(true);
+    try {
+      await axios.post(`${API}/feedback`, {
+        message: feedbackText,
+        type: 'provider'
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success("تم إرسال ملاحظتك للإدارة ✅");
+      setFeedbackOpen(false);
+      setFeedbackText('');
+    } catch (e) {
+      toast.error("فشل الإرسال");
+    } finally {
+      setSendingFeedback(false);
+    }
+  };
+
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#0A0A0F]"><div className="spinner"></div></div>;
 
   return (
@@ -2376,10 +2503,30 @@ const ProviderDashboard = () => {
               <p className="text-[#8B8B9E]">لوحة تحكم المزود</p>
             </div>
           </div>
-          <Button variant="outline" onClick={() => { localStorage.removeItem("provider_token"); navigate("/"); }}>
-            <LogOut className="w-4 h-4 mr-2" /> خروج
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setFeedbackOpen(true)}>
+              <MessageSquare className="w-4 h-4 mr-2" /> ملاحظات
+            </Button>
+            <Button variant="outline" onClick={() => { localStorage.removeItem("provider_token"); navigate("/"); }}>
+              <LogOut className="w-4 h-4 mr-2" /> خروج
+            </Button>
+          </div>
         </div>
+
+        {/* Quick Actions */}
+        <Card className="gpu-card neon-border">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">أضف كرت GPU جديد</h3>
+                <p className="text-[#8B8B9E]">سجل كرتك وابدأ بتحقيق الأرباح</p>
+              </div>
+              <Button className="btn-neon" onClick={() => setAddGPUOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" /> إضافة GPU
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -2438,7 +2585,7 @@ const ProviderDashboard = () => {
         </div>
 
         {/* Revenue Info */}
-        <Card className="gpu-card neon-border">
+        <Card className="gpu-card">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -2450,6 +2597,9 @@ const ProviderDashboard = () => {
                 <p className="text-sm text-[#8B8B9E]">أرباح اليوم</p>
                 <p className="text-3xl font-bold text-[#00FF88]">${data?.earnings?.today?.toFixed(4)}</p>
               </div>
+            </div>
+          </CardContent>
+        </Card>
             </div>
           </CardContent>
         </Card>
