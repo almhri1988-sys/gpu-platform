@@ -598,6 +598,59 @@ async def get_current_user(authorization: str = Header(None)):
 
 # ============== AUTH ROUTES ==============
 
+# === تسجيل الدخول بجوجل ===
+class GoogleAuthRequest(BaseModel):
+    email: EmailStr
+    name: str
+    picture: Optional[str] = None
+    google_id: str
+
+@api_router.post("/auth/google")
+async def google_auth(data: GoogleAuthRequest):
+    """تسجيل/دخول بحساب Google - الطريقة الأسهل"""
+    # البحث عن المستخدم
+    existing = await db.users.find_one({"email": data.email}, {"_id": 0})
+    
+    if existing:
+        # تحديث بيانات Google إذا لزم الأمر
+        await db.users.update_one(
+            {"email": data.email},
+            {"$set": {
+                "google_id": data.google_id,
+                "picture": data.picture,
+                "name": data.name if not existing.get("name") else existing.get("name")
+            }}
+        )
+        user = await db.users.find_one({"email": data.email}, {"_id": 0})
+        await log_security_event("google_login", user["id"], {"email": data.email})
+        token = create_token(user["id"], user.get("role", "user"))
+        return {"token": token, "user": {k: v for k, v in user.items() if k not in ["password", "two_factor_secret"]}}
+    
+    # إنشاء حساب جديد
+    user_doc = {
+        "id": str(uuid.uuid4()),
+        "email": data.email,
+        "password": None,  # لا يحتاج كلمة مرور - يستخدم Google
+        "name": data.name,
+        "picture": data.picture,
+        "google_id": data.google_id,
+        "balance": 0.0,
+        "role": "user",
+        "two_factor_enabled": False,
+        "two_factor_secret": None,
+        "two_factor_method": None,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.users.insert_one(user_doc)
+    await log_security_event("google_register", user_doc["id"], {"email": data.email})
+    
+    token = create_token(user_doc["id"], "user")
+    return {
+        "token": token, 
+        "user": {k: v for k, v in user_doc.items() if k not in ["password", "_id", "two_factor_secret"]},
+        "message": "مرحباً بك! 🎉"
+    }
+
 # === نظام توليد كلمة مرور تلقائية ===
 @api_router.get("/auth/generate-password")
 async def get_suggested_password():
