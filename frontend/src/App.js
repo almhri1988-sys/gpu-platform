@@ -3072,42 +3072,14 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/" element={<Navigate to="/marketplace" replace />} />
       <Route path="/provider/login" element={<ProviderLoginPage />} />
       <Route path="/provider/dashboard" element={<ProviderDashboard />} />
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <DashboardLayout><DashboardHome /></DashboardLayout>
-        </ProtectedRoute>
-      } />
-      <Route path="/marketplace" element={
-        <ProtectedRoute>
-          <DashboardLayout><MarketplacePage /></DashboardLayout>
-        </ProtectedRoute>
-      } />
-      <Route path="/instances" element={
-        <ProtectedRoute>
-          <DashboardLayout><InstancesPage /></DashboardLayout>
-        </ProtectedRoute>
-      } />
-      <Route path="/billing" element={
-        <ProtectedRoute>
-          <DashboardLayout><BillingPage /></DashboardLayout>
-        </ProtectedRoute>
-      } />
-      <Route path="/security" element={
-        <ProtectedRoute>
-          <DashboardLayout><SecurityPage /></DashboardLayout>
-        </ProtectedRoute>
-      } />
-      <Route path="/admin" element={
-        <ProtectedRoute>
-          <DashboardLayout><AdminDashboard /></DashboardLayout>
-        </ProtectedRoute>
-      } />
+      <Route path="/dashboard" element={<DashboardLayout><DashboardHome /></DashboardLayout>} />
+      <Route path="/marketplace" element={<DashboardLayout><MarketplacePage /></DashboardLayout>} />
+      <Route path="/instances" element={<DashboardLayout><InstancesPage /></DashboardLayout>} />
+      <Route path="/billing" element={<DashboardLayout><BillingPage /></DashboardLayout>} />
+      <Route path="/admin" element={<DashboardLayout><AdminDashboard /></DashboardLayout>} />
     </Routes>
   );
 }
