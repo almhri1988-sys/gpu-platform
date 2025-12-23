@@ -404,6 +404,45 @@ class GPUCloudAPITester:
         self.log_test("2FA Login Endpoint", endpoint_works,
                      f"2FA login endpoint responded: {data.get('detail', 'Success' if 'token' in data else 'Requires 2FA')}" if endpoint_works else f"Error: {data}")
 
+    def test_google_oauth(self):
+        """Test Google OAuth authentication endpoint"""
+        print("\n🔍 Testing Google OAuth...")
+        
+        # Test Google OAuth endpoint with mock data
+        google_auth_data = {
+            "email": f"googleuser_{datetime.now().strftime('%H%M%S')}@gmail.com",
+            "name": "Google Test User",
+            "picture": "https://example.com/avatar.jpg",
+            "google_id": f"google_id_{datetime.now().strftime('%H%M%S')}"
+        }
+        
+        success, data = self.make_request('POST', 'auth/google', google_auth_data, 200)
+        has_token = success and 'token' in data and 'user' in data
+        self.log_test("Google OAuth Registration", has_token,
+                     f"Created user via Google OAuth: {data.get('user', {}).get('email', 'Unknown')}" if has_token else f"Error: {data}")
+        
+        if has_token:
+            self.google_user_token = data['token']
+            self.google_user_email = google_auth_data['email']
+            
+            # Test Google OAuth login (existing user)
+            success, data = self.make_request('POST', 'auth/google', google_auth_data, 200)
+            login_success = success and 'token' in data and 'user' in data
+            self.log_test("Google OAuth Login (Existing User)", login_success,
+                         f"Logged in existing Google user: {data.get('user', {}).get('email', 'Unknown')}" if login_success else f"Error: {data}")
+        
+        # Test Google OAuth with missing fields
+        incomplete_data = {
+            "email": f"incomplete_{datetime.now().strftime('%H%M%S')}@gmail.com",
+            "google_id": f"incomplete_id_{datetime.now().strftime('%H%M%S')}"
+            # Missing name field
+        }
+        
+        success, data = self.make_request('POST', 'auth/google', incomplete_data, 200)
+        handles_missing = success and 'token' in data
+        self.log_test("Google OAuth (Missing Name)", handles_missing,
+                     f"Handled missing name field gracefully" if handles_missing else f"Error: {data}")
+
     def test_all_instances(self):
         """Test get all instances"""
         print("\n📋 Testing All Instances...")
