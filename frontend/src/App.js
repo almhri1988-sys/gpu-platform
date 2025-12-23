@@ -2936,40 +2936,60 @@ const AppRoutes = () => {
   const processedRef = React.useRef(false);
 
   useEffect(() => {
-    // معالجة session_id من Google Auth
+    // معالجة session_id من Google Auth - يمكن أن يكون في hash أو query params
     const hash = location.hash;
-    if (hash && hash.includes('session_id=') && !processedRef.current) {
-      processedRef.current = true;
-      const sessionId = hash.split('session_id=')[1]?.split('&')[0];
-      
-      if (sessionId) {
-        // جلب بيانات المستخدم
-        fetch('https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data', {
-          headers: { 'X-Session-ID': sessionId }
-        })
-        .then(res => res.json())
-        .then(async (data) => {
-          // حفظ المستخدم في قاعدة البيانات
-          const backendRes = await axios.post(`${API}/auth/google`, {
-            email: data.email,
-            name: data.name,
-            picture: data.picture,
-            google_id: data.id
-          });
-          
-          setAuthFromGoogle(backendRes.data.user, backendRes.data.token);
-          toast.success(`مرحباً ${data.name}! 🎉`);
-          window.history.replaceState({}, '', '/dashboard');
-          navigate('/dashboard', { replace: true });
-        })
-        .catch((err) => {
-          console.error('Google auth error:', err);
-          toast.error("فشل تسجيل الدخول");
-          navigate('/login');
-        });
-      }
+    const search = location.search;
+    
+    let sessionId = null;
+    
+    // البحث في hash
+    if (hash && hash.includes('session_id=')) {
+      sessionId = hash.split('session_id=')[1]?.split('&')[0];
     }
-  }, [location.hash]);
+    // البحث في query params
+    if (!sessionId && search && search.includes('session_id=')) {
+      sessionId = search.split('session_id=')[1]?.split('&')[0];
+    }
+    // البحث في URL كامل
+    if (!sessionId && window.location.href.includes('session_id=')) {
+      sessionId = window.location.href.split('session_id=')[1]?.split('&')[0]?.split('#')[0];
+    }
+    
+    if (sessionId && !processedRef.current) {
+      processedRef.current = true;
+      console.log('Found session_id:', sessionId);
+      
+      // جلب بيانات المستخدم
+      fetch('https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data', {
+        headers: { 'X-Session-ID': sessionId }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Session invalid');
+        return res.json();
+      })
+      .then(async (data) => {
+        console.log('Got user data:', data);
+        // حفظ المستخدم في قاعدة البيانات
+        const backendRes = await axios.post(`${API}/auth/google`, {
+          email: data.email,
+          name: data.name,
+          picture: data.picture,
+          google_id: data.id
+        });
+        
+        setAuthFromGoogle(backendRes.data.user, backendRes.data.token);
+        toast.success(`مرحباً ${data.name}! 🎉`);
+        window.history.replaceState({}, '', '/dashboard');
+        navigate('/dashboard', { replace: true });
+        window.location.reload(); // تحديث الصفحة لتفعيل الـ token
+      })
+      .catch((err) => {
+        console.error('Google auth error:', err);
+        toast.error("فشل تسجيل الدخول - حاول مرة أخرى");
+        navigate('/login');
+      });
+    }
+  }, [location.hash, location.search]);
 
   return (
     <Routes>
