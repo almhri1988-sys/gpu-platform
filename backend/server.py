@@ -2415,6 +2415,67 @@ async def get_provider_payouts(authorization: str = Header(None)):
     
     return payouts
 
+# ============== نظام الملاحظات والدعم ==============
+
+class FeedbackRequest(BaseModel):
+    message: str
+    type: str = "user"  # user, provider, general
+
+@api_router.post("/feedback")
+async def send_feedback(data: FeedbackRequest, authorization: str = Header(None)):
+    """إرسال ملاحظات للإدارة"""
+    user_id = None
+    user_email = "زائر"
+    
+    if authorization:
+        try:
+            token = authorization.split(" ")[1]
+            payload = verify_token(token)
+            user_id = payload["user_id"]
+            
+            # جلب بيانات المرسل
+            if payload.get("role") == "provider":
+                provider = await db.providers.find_one({"id": user_id}, {"_id": 0})
+                if provider:
+                    user_email = provider.get("email", "مزود")
+            else:
+                user = await db.users.find_one({"id": user_id}, {"_id": 0})
+                if user:
+                    user_email = user.get("email", "مستخدم")
+        except:
+            pass
+    
+    feedback = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "user_email": user_email,
+        "message": data.message,
+        "type": data.type,
+        "status": "new",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.feedback.insert_one(feedback)
+    
+    # تسجيل للـ logs
+    logging.info(f"📩 ملاحظة جديدة من {user_email}: {data.message[:100]}...")
+    
+    return {"success": True, "message": "تم إرسال ملاحظتك بنجاح"}
+
+@api_router.get("/admin/feedback")
+async def get_all_feedback(authorization: str = Header(None)):
+    """عرض جميع الملاحظات للإدارة"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="غير مصرح")
+    token = authorization.split(" ")[1]
+    payload = verify_token(token)
+    
+    user = await db.users.find_one({"id": payload["user_id"]})
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="صلاحيات الإدارة مطلوبة")
+    
+    feedbacks = await db.feedback.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return feedbacks
+
 # ============== ADMIN ROUTES ==============
 
 @api_router.get("/admin/stats")
