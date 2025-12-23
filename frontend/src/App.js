@@ -1009,50 +1009,53 @@ const DashboardLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navItems = [
-    { path: "/marketplace", label: "سوق GPUs", icon: Server },
-    { path: "/instances", label: "الجلسات", icon: Activity },
-    { path: "/billing", label: "الفوترة", icon: Wallet },
+    { path: "/marketplace", label: "تصفح الكروت", icon: Server },
+    { path: "/billing", label: "شحن الرصيد", icon: Wallet },
+    { path: "/provider/login", label: "أنا مزود GPU", icon: Cpu },
   ];
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] flex" dir="rtl">
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside className={`
-        fixed lg:static inset-y-0 right-0 z-50
-        w-64 sidebar transform transition-transform duration-300
-        ${sidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
-      `}>
-        <div className="flex flex-col h-full">
-          <div className="p-4 border-b border-[#1E1E2E]">
+    <div className="min-h-screen bg-[#0A0A0F]" dir="rtl">
+      {/* Top Header */}
+      <header className="sticky top-0 z-50 bg-[#0A0A0F]/95 backdrop-blur-xl border-b border-[#1E1E2E]">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
             <Link to="/marketplace" className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#00D4FF] to-[#0099CC] flex items-center justify-center">
                 <Cpu className="w-6 h-6 text-[#0A0A0F]" />
               </div>
-              <span className="text-lg font-bold">GPU Cloud Pro</span>
+              <span className="text-lg font-bold hidden sm:block">GPU Cloud Pro</span>
             </Link>
-          </div>
 
-          <nav className="flex-1 py-4">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`sidebar-link ${location.pathname === item.path ? 'active' : ''}`}
-                onClick={() => setSidebarOpen(false)}
-                data-testid={`nav-${item.path.replace('/', '')}`}
-              >
-                <item.icon className="w-5 h-5" />
-                <span>{item.label}</span>
-              </Link>
-            ))}
+            {/* Navigation */}
+            <nav className="flex items-center gap-2 sm:gap-4">
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors
+                    ${location.pathname === item.path 
+                      ? 'bg-[#00D4FF]/10 text-[#00D4FF]' 
+                      : 'text-[#8B8B9E] hover:text-white hover:bg-[#1E1E2E]'
+                    }`}
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span className="hidden sm:inline">{item.label}</span>
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      {/* Page Content */}
+      <main className="max-w-7xl mx-auto p-4 lg:p-8">
+        {children}
+      </main>
+    </div>
+  );
+};
           </nav>
 
           <div className="p-4 border-t border-[#1E1E2E]">
