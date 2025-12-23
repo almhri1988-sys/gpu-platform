@@ -639,7 +639,12 @@ const LoginPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label>كلمة المرور</Label>
+              <div className="flex items-center justify-between">
+                <Label>كلمة المرور</Label>
+                <Link to="/forgot-password" className="text-xs text-[#00D4FF] hover:underline">
+                  نسيت كلمة المرور؟
+                </Link>
+              </div>
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
@@ -669,6 +674,125 @@ const LoginPage = () => {
             ليس لديك حساب؟{" "}
             <Link to="/register" className="text-[#00D4FF] hover:underline font-medium">
               إنشاء حساب جديد
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// صفحة نسيت كلمة المرور
+const ForgotPasswordPage = () => {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email) {
+      toast.error("أدخل بريدك الإلكتروني");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const res = await axios.post(`${API}/auth/forgot-password`, { email });
+      if (res.data.new_password) {
+        setNewPassword(res.data.new_password);
+      }
+      setSent(true);
+      toast.success("تم إرسال كلمة المرور الجديدة");
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "البريد غير مسجل");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (sent) {
+    return (
+      <div className="min-h-screen gradient-mesh flex items-center justify-center px-4" dir="rtl">
+        <Card className="w-full max-w-md gpu-card">
+          <CardHeader className="text-center">
+            <div className="w-16 h-16 rounded-full bg-[#00FF88]/20 flex items-center justify-center mx-auto mb-4">
+              <Check className="w-8 h-8 text-[#00FF88]" />
+            </div>
+            <CardTitle className="text-2xl">تم بنجاح!</CardTitle>
+            <CardDescription>كلمة المرور الجديدة</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {newPassword && (
+              <div className="p-4 rounded-lg bg-[#00D4FF]/10 border border-[#00D4FF]/30">
+                <p className="text-sm text-[#8B8B9E] mb-2">كلمة المرور الجديدة:</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 p-3 rounded bg-[#0A0A0F] text-lg font-mono text-[#00D4FF]">
+                    {newPassword}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      navigator.clipboard.writeText(newPassword);
+                      toast.success("تم نسخ كلمة المرور");
+                    }}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+            <p className="text-sm text-[#8B8B9E] text-center">
+              احفظ كلمة المرور الجديدة واستخدمها لتسجيل الدخول
+            </p>
+            <Link to="/login">
+              <Button className="w-full btn-neon">
+                تسجيل الدخول
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen gradient-mesh flex items-center justify-center px-4" dir="rtl">
+      <Card className="w-full max-w-md gpu-card">
+        <CardHeader className="text-center">
+          <Link to="/" className="inline-flex items-center gap-2 justify-center mb-4">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#00D4FF] to-[#0099CC] flex items-center justify-center">
+              <Cpu className="w-6 h-6 text-[#0A0A0F]" />
+            </div>
+            <span className="text-xl font-bold">GPU Cloud Pro</span>
+          </Link>
+          <CardTitle className="text-2xl">نسيت كلمة المرور؟</CardTitle>
+          <CardDescription>أدخل بريدك وسنرسل لك كلمة مرور جديدة</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label>البريد الإلكتروني</Label>
+              <Input
+                type="email"
+                placeholder="example@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="text-right"
+                dir="ltr"
+              />
+            </div>
+            <Button type="submit" className="w-full btn-neon h-12" disabled={loading}>
+              {loading ? "جاري الإرسال..." : "إرسال كلمة مرور جديدة"}
+            </Button>
+          </form>
+
+          <div className="text-center text-sm text-[#8B8B9E]">
+            تذكرت كلمة المرور؟{" "}
+            <Link to="/login" className="text-[#00D4FF] hover:underline font-medium">
+              تسجيل الدخول
             </Link>
           </div>
         </CardContent>
