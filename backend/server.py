@@ -1603,7 +1603,10 @@ async def create_checkout(request: Request, data: AddFundsRequest):
     
     stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
     
-    success_url = f"{host_url}/billing?session_id={{CHECKOUT_SESSION_ID}}"
+    # إنشاء معرف للمعاملة
+    transaction_id = str(uuid.uuid4())
+    
+    success_url = f"{host_url}/billing?session_id={{CHECKOUT_SESSION_ID}}&success=true"
     cancel_url = f"{host_url}/billing"
     
     checkout_request = CheckoutSessionRequest(
@@ -1612,8 +1615,7 @@ async def create_checkout(request: Request, data: AddFundsRequest):
         success_url=success_url,
         cancel_url=cancel_url,
         metadata={
-            "user_id": user["id"],
-            "user_email": user["email"],
+            "transaction_id": transaction_id,
             "type": "add_funds"
         }
     )
@@ -1622,13 +1624,12 @@ async def create_checkout(request: Request, data: AddFundsRequest):
     
     # Store pending transaction
     transaction = {
-        "id": str(uuid.uuid4()),
+        "id": transaction_id,
         "session_id": session.session_id,
-        "user_id": user["id"],
         "amount": float(data.amount),
         "type": "deposit",
         "status": "pending",
-        "description": f"Add funds: ${data.amount:.2f}",
+        "description": f"إضافة رصيد: ${data.amount:.2f}",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.payment_transactions.insert_one(transaction)
