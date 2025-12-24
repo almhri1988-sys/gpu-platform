@@ -1048,6 +1048,48 @@ async def get_regions():
             {"$group": {"_id": None, "avg_latency": {"$avg": "$latency"}}}
         ]).to_list(1)
         region_stats.append({
+
+# ============== استئجار بدون حساب ==============
+class GuestRentRequest(BaseModel):
+    gpu_id: str
+
+@api_router.post("/instances/start-guest")
+async def start_instance_guest(data: GuestRentRequest):
+    """بدء استئجار GPU - للزوار بدون حساب"""
+    gpu = await db.gpus.find_one({"id": data.gpu_id}, {"_id": 0})
+    if not gpu:
+        raise HTTPException(status_code=404, detail="GPU غير موجود")
+    if gpu["status"] != "available":
+        raise HTTPException(status_code=400, detail="GPU غير متاح حالياً")
+    
+    # إنشاء معرف زائر
+    guest_id = f"guest_{uuid.uuid4().hex[:8]}"
+    
+    instance = {
+        "id": str(uuid.uuid4()),
+        "user_id": guest_id,
+        "gpu_id": gpu["id"],
+        "gpu_name": gpu["name"],
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "status": "pending_payment",  # بانتظار الدفع
+        "price_per_second": gpu["price_per_second"],
+        "total_cost": 0.0,
+        "access_info": {
+            "message": "اشحن رصيدك لبدء الاستخدام",
+            "gpu": gpu["name"],
+            "price_per_hour": f"${gpu['price_per_hour']:.2f}"
+        }
+    }
+    await db.instances.insert_one(instance)
+    
+    return {
+        "success": True,
+        "instance": {k: v for k, v in instance.items() if k != "_id"},
+        "message": "تم حجز الـ GPU! اشحن رصيدك للبدء",
+        "next_step": "billing"
+    }
+
+@api_router.get("/regions/stats")
             "name": region,
             "available_gpus": count,
             "avg_latency": int(avg_latency[0]["avg_latency"]) if avg_latency else 0
