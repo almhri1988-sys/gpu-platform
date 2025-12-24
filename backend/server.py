@@ -1593,9 +1593,10 @@ FUND_PACKAGES = {
 }
 
 @api_router.post("/payments/create-checkout")
-async def create_checkout(request: Request, data: AddFundsRequest, user: dict = Depends(get_current_user)):
+async def create_checkout(request: Request, data: AddFundsRequest):
+    """إنشاء جلسة دفع - يعمل للجميع بدون تسجيل"""
     if data.amount < 5.0:
-        raise HTTPException(status_code=400, detail="Minimum amount is $5.00")
+        raise HTTPException(status_code=400, detail="الحد الأدنى $5.00")
     
     host_url = data.origin_url.rstrip('/')
     webhook_url = f"{str(request.base_url).rstrip('/')}/api/webhook/stripe"
