@@ -1277,10 +1277,6 @@ const MarketplacePage = () => {
   };
 
   const handleRent = (gpu) => {
-    if (!user) {
-      window.location.href = "/login";
-      return;
-    }
     setSelectedGpu(gpu);
     setConfirmDialog(true);
   };
@@ -1289,13 +1285,15 @@ const MarketplacePage = () => {
     if (!selectedGpu) return;
     setStartingGpu(selectedGpu.id);
     try {
-      await axios.post(`${API}/instances/start`, { gpu_id: selectedGpu.id }, { headers: { Authorization: `Bearer ${token}` } });
-      toast.success("تم بدء الجلسة بنجاح!");
-      refreshUser();
+      // بدء الجلسة بدون حساب
+      const res = await axios.post(`${API}/instances/start-guest`, { gpu_id: selectedGpu.id });
+      toast.success("تم بدء الجلسة بنجاح! 🎉");
       fetchData();
-      window.location.href = "/instances";
+      // الذهاب لصفحة الفوترة لشحن الرصيد
+      toast.info("اشحن رصيدك للاستمرار");
+      window.location.href = "/billing";
     } catch (e) {
-      toast.error(e.response?.data?.detail || "فشل بدء الجلسة");
+      toast.error(e.response?.data?.detail || "فشل بدء الجلسة - اشحن رصيدك أولاً");
     } finally {
       setStartingGpu(null);
       setConfirmDialog(false);
