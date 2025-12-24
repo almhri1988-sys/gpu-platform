@@ -1048,6 +1048,11 @@ async def get_regions():
             {"$group": {"_id": None, "avg_latency": {"$avg": "$latency"}}}
         ]).to_list(1)
         region_stats.append({
+            "name": region,
+            "available_gpus": count,
+            "avg_latency": int(avg_latency[0]["avg_latency"]) if avg_latency else 0
+        })
+    return region_stats
 
 # ============== استئجار بدون حساب ==============
 class GuestRentRequest(BaseModel):
@@ -1071,7 +1076,7 @@ async def start_instance_guest(data: GuestRentRequest):
         "gpu_id": gpu["id"],
         "gpu_name": gpu["name"],
         "started_at": datetime.now(timezone.utc).isoformat(),
-        "status": "pending_payment",  # بانتظار الدفع
+        "status": "pending_payment",
         "price_per_second": gpu["price_per_second"],
         "total_cost": 0.0,
         "access_info": {
@@ -1089,7 +1094,7 @@ async def start_instance_guest(data: GuestRentRequest):
         "next_step": "billing"
     }
 
-@api_router.get("/regions/stats")
+# ============== HEALTH MONITORING & FAILOVER ==============
             "name": region,
             "available_gpus": count,
             "avg_latency": int(avg_latency[0]["avg_latency"]) if avg_latency else 0
