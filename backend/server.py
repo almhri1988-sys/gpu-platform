@@ -1095,13 +1095,6 @@ async def start_instance_guest(data: GuestRentRequest):
     }
 
 # ============== HEALTH MONITORING & FAILOVER ==============
-            "name": region,
-            "available_gpus": count,
-            "avg_latency": int(avg_latency[0]["avg_latency"]) if avg_latency else 0
-        })
-    return region_stats
-
-# ============== HEALTH MONITORING & FAILOVER ==============
 
 async def check_gpu_health(gpu_id: str) -> dict:
     """Simulate real-time GPU health check"""
